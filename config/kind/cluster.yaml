@@ -1,0 +1,30 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: encoder-run-local
+nodes:
+- role: control-plane
+  image: kindest/node:v1.23.17@sha256:e5fd1d9cd7a9a50939f9c005684df5a6d145e8d695e78463637b79464292e66c
+  kubeadmConfigPatches:
+  - |
+    kind: InitConfiguration
+    nodeRegistration:
+      kubeletExtraArgs:
+        node-labels: "ingress-ready=true"
+  extraPortMappings:
+  - containerPort: 28080
+    hostPort: 28080
+    protocol: TCP
+  - containerPort: 28000
+    hostPort: 28000
+    protocol: TCP
+  - containerPort: 28081
+    hostPort: 28081
+    protocol: TCP
+  - containerPort: 28082
+    hostPort: 28082
+    protocol: TCP
+  extraMounts:
+  - hostPath: /usr/local/nova
+    containerPath: /nova
+- role: worker
+  image: kindest/node:v1.23.17@sha256:e5fd1d9cd7a9a50939f9c005684df5a6d145e8d695e78463637b79464292e66c

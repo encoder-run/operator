@@ -1,0 +1,32 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - models
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - models/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - models/status
+  verbs:
+  - get
+  - patch
+  - update
