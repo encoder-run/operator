@@ -10,6 +10,8 @@ CONSOLE_UI_IMG ?= console-ui
 CONSOLE_UI_IMG_VERSION ?= 0.0.1
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.28.0
+ISTIO_VERSION=1.17.2
+ISTIO=$(LOCALBIN)/istio-$(ISTIO_VERSION)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -135,10 +137,17 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests kustomize docker-build gateway-build console-ui-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests istio kustomize docker-build gateway-build console-ui-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	make kind-delete
 	make kind
+	$(ISTIO)/bin/istioctl x precheck
+	$(ISTIO)/bin/istioctl install --set profile=default -y
 	make install
+	$(CMCTL) x install --set prometheus.enabled=false
+	@echo "Waiting for cert-manager to be ready..."
+	$(KUBECTL) wait --for=condition=ready pod -l app=cert-manager --timeout=180s -n cert-manager
+	$(KUBECTL) wait --for=condition=ready pod -l app=webhook --timeout=180s -n cert-manager
+	$(KUSTOMIZE) build config/kserve | $(KUBECTL) apply -f -
 	kind load docker-image $(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(GATEWAY_IMG):$(GATEWAY_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(CONSOLE_UI_IMG):$(CONSOLE_UI_IMG_VERSION) --name=$(CLUSTER_NAME)
@@ -160,6 +169,7 @@ $(LOCALBIN):
 ## Tool Binaries
 KUBECTL ?= kubectl
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
+CMCTL ?= $(LOCALBIN)/cmctl
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 
@@ -187,6 +197,31 @@ envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	test -s $(LOCALBIN)/setup-envtest || GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
 
+.PHONY: istio
+istio: ## Download istio if it doesn't already exist
+	@if [ ! -d "$(ISTIO)" ]; then \
+		echo "Istio $(ISTIO_VERSION) not found. Downloading and installing..."; \
+		curl -L https://istio.io/downloadIstio | ISTIO_VERSION=$(ISTIO_VERSION) sh -; \
+		rm -rf $(ISTIO); \
+		mv istio-$(ISTIO_VERSION) $(ISTIO); \
+	else \
+		echo "Istio $(ISTIO_VERSION) already installed at $(ISTIO)."; \
+	fi
+
+.PHONY: cert-manager-install
+cert-manager-install: ## Install cert-manager
+	@if [ ! -x $(LOCALBIN)/cmctl ]; then \
+		echo "cmctl not installed. Installing..."; \
+		OS=$$(go env GOOS); ARCH=$$(go env GOARCH); \
+		URL="https://github.com/cert-manager/cmctl/releases/download/v2.0.0/cmctl_$${OS}_$${ARCH}"; \
+		echo "Downloading cmctl from $${URL}"; \
+		curl -fsSL -o cmctl $${URL} || { echo "Download failed"; exit 1; }; \
+		chmod +x ./cmctl; \
+		sudo mv ./cmctl $(LOCALBIN)/cmctl; \
+	else \
+		echo "cmctl is already installed."; \
+	fi
+
 .PHONY: kind
 kind: # Create a kind cluster
 	kind create cluster --config=config/kind/cluster.yaml
@@ -194,7 +229,7 @@ kind: # Create a kind cluster
 
 .PHONY: kind-install
 kind-install: # Install the controller in the kind cluster
-	@if [ ! -x /usr/local/bin/kind ]; then \
+	@if [ ! -x $(LOCALBIN)/kind ]; then \
 		echo "kind not installed. Installing..."; \
 		if [ $$(uname) = "Linux" ]; then \
 			[ $$(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64; \
@@ -204,7 +239,7 @@ kind-install: # Install the controller in the kind cluster
 			[ $$(uname -m) = arm64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-darwin-arm64; \
 		fi; \
 		chmod +x ./kind; \
-		sudo mv ./kind /usr/local/bin/kind; \
+		sudo mv $(LOCALBIN)/kind; \
 	fi
 
 .PHONY: kind-delete
