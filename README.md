@@ -16,11 +16,12 @@ Before setting up `encoder-run`, ensure the following prerequisites are met:
 - **Golang**: Golang version 1.21.*+ is required.
 - **Docker**: Docker must be installed on your system as it is required to containerize the application components and dependencies. Visit [Docker's official site](https://docs.docker.com/get-docker/) for installation instructions.
 - **Kubernetes Kind**: `kind` is used to create a local Kubernetes cluster. If it is not already installed, you can run `make kind-install` which will check for its presence and install it if it's missing.
+- **Node**: `node` is used only if you are developing locally. Install v18.17.0.
 
 ### Deployment
 Use the following command to deploy the application:
 ```bash
-make && make deploy
+make deploy
 ```
 This command will set up the necessary Kubernetes configurations and launch all components. Once deployed, it will expose:
 - **Console-UI** on `localhost:32081`
@@ -31,7 +32,7 @@ To run the frontend interface with mock data, follow these steps:
 1. Navigate to the frontend console-UI directory:
    ```bash
    cd frontend/console-ui
-   npm install && npm compile
+   npm install && npm run generate
    cd ../mock
    npm install
    cd ../console-ui
