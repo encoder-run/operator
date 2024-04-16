@@ -1,0 +1,8 @@
+kserve==0.11.0-rc1
+torch==2.0.0
+torchvision==0.15.1
+transformers
+accelerate
+sentence-transformers
+optimum
+optimum[onnxruntime]
