@@ -6,3 +6,4 @@ accelerate
 sentence-transformers
 optimum
 optimum[onnxruntime]
+argparse

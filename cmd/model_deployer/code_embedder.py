@@ -3,25 +3,25 @@ from typing import Dict, List
 from kserve import Model, ModelServer
 from transformers import AutoTokenizer
 from sentence_transformers import SentenceTransformer
+import argparse
 
 device = "cuda"  # for GPU usage or "cpu" for CPU usage
 
 
 class CustomModel(Model):
-    def __init__(self, name: str):
-        super().__init__(name)
-        self.name = name
-        self.ready = False
-        self.device = torch.device(
-            device if torch.cuda.is_available() else "cpu")  # Use GPU if available
+    def __init__(self, org_name: str, repo_name: str, max_sequence_length: int):
+        model_name = f"{org_name}/{repo_name}"
+        super().__init__(model_name)
+        self.org_name = org_name
+        self.repo_name = repo_name
+        self.max_sequence_length = max_sequence_length
+        self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         print("Using device:", self.device)
 
     def load(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "flax-sentence-embeddings/st-codesearch-distilroberta-base")
-        self.model = SentenceTransformer(
-            "flax-sentence-embeddings/st-codesearch-distilroberta-base")
-        self.model.max_seq_length = 512
+        self.tokenizer = AutoTokenizer.from_pretrained("flax-sentence-embeddings/st-codesearch-distilroberta-base")
+        self.model = SentenceTransformer("flax-sentence-embeddings/st-codesearch-distilroberta-base")
+        self.model.max_seq_length = self.max_sequence_length
         self.ready = True
 
     def predict(self, payload: Dict, headers: Dict) -> Dict:
@@ -133,6 +133,15 @@ class CustomModel(Model):
 
 
 if __name__ == "__main__":
-    model = CustomModel("kserve-custom-model")
+    parser = argparse.ArgumentParser(description="Initialize the CustomModel with command line parameters.")
+    parser.add_argument("--org_name", type=str, required=True, help="Organization name")
+    parser.add_argument("--repo_name", type=str, required=True, help="Repository name")
+    parser.add_argument("--max_sequence_length", type=int, default=512,
+                        help="Maximum input sequence length of the model")
+
+    args = parser.parse_args()  # Parse the arguments from the command line
+
+    # Create an instance of the model using the parsed arguments
+    model = CustomModel(org_name=args.org_name, repo_name=args.repo_name, max_sequence_length=args.max_sequence_length)
     model.load()
     ModelServer().start([model])
