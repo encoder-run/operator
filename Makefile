@@ -192,6 +192,21 @@ kind: # Create a kind cluster
 	kind create cluster --config=config/kind/cluster.yaml
 	kubectl apply -f config/kind/ingress-nginx.yaml
 
+.PHONY: kind-install
+kind-install: # Install the controller in the kind cluster
+	@if [ ! -x /usr/local/bin/kind ]; then \
+		echo "kind not installed. Installing..."; \
+		if [ $$(uname) = "Linux" ]; then \
+			[ $$(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64; \
+			[ $$(uname -m) = aarch64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-arm64; \
+		elif [ $$(uname) = "Darwin" ]; then \
+			[ $$(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-darwin-amd64; \
+			[ $$(uname -m) = arm64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-darwin-arm64; \
+		fi; \
+		chmod +x ./kind; \
+		sudo mv ./kind /usr/local/bin/kind; \
+	fi
+
 .PHONY: kind-delete
 kind-delete: # Delete the kind cluster
 	kind delete cluster --name $(CLUSTER_NAME)

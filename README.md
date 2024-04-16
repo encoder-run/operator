@@ -12,3 +12,29 @@
 ## Getting Started
 
 ### Prerequisites
+Before setting up `encoder-run`, ensure the following prerequisites are met:
+- **Docker**: Docker must be installed on your system as it is required to containerize the application components and dependencies. Visit [Docker's official site](https://docs.docker.com/get-docker/) for installation instructions.
+- **Kubernetes Kind**: `kind` is used to create a local Kubernetes cluster. If it is not already installed, you can run `make kind-install` which will check for its presence and install it if it's missing.
+
+### Deployment
+Use the following command to deploy the application:
+```bash
+make deploy
+```
+This command will set up the necessary Kubernetes configurations and launch all components. Once deployed, it will expose:
+- **Console-UI** on `localhost:32081`
+- **Gateway** on `localhost:32080`
+
+### Running the Frontend with Mock Data
+To run the frontend interface with mock data, follow these steps:
+1. Navigate to the frontend console-UI directory:
+   ```bash
+   cd frontend/console-ui
+   npm install && npm compile
+   cd ../mock
+   npm install
+   cd ../console-ui
+   npm run local
+   ```
+This setup will spin up the UI on localhost:3000 and the mock gateway on localhost:4000, simulating the full environment for development or testing.
+
