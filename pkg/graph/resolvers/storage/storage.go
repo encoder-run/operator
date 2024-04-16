@@ -37,6 +37,28 @@ func List(ctx context.Context) ([]*model.Storage, error) {
 	return storages, nil
 }
 
+func Get(ctx context.Context, id string) (*model.Storage, error) {
+	// Get the controller-runtime client from the context.
+	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
+	if !ok {
+		return nil, fmt.Errorf("controller-runtime client not found in context")
+	}
+
+	// Get the storage.
+	storageCRD := &v1alpha1.Storage{}
+	if err := ctrlClient.Get(ctx, client.ObjectKey{Name: id, Namespace: "default"}, storageCRD); err != nil {
+		return nil, err
+	}
+
+	// Convert the storage to the model.
+	s, err := converters.StorageCRDToModel(storageCRD)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
 func Add(ctx context.Context, input model.AddStorageInput) (*model.Storage, error) {
 	// Get the controller-runtime client from the context.
 	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)

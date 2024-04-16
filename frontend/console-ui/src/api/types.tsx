@@ -37,6 +37,13 @@ export type AddStorageInput = {
   type: StorageType;
 };
 
+export type DeployModelInput = {
+  cpu: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  memory: Scalars['String']['input'];
+  replicas: Scalars['Int']['input'];
+};
+
 export type HuggingFace = {
   __typename?: 'HuggingFace';
   name: Scalars['String']['output'];
@@ -78,6 +85,7 @@ export type Mutation = {
   deleteModel: Model;
   deleteRepository: Repository;
   deleteStorage: Storage;
+  deployModel: Model;
 };
 
 
@@ -110,11 +118,34 @@ export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type MutationDeployModelArgs = {
+  input: DeployModelInput;
+};
+
 export type Query = {
   __typename?: 'Query';
+  getModel: Model;
+  getRepository: Repository;
+  getStorage: Storage;
   models: Array<Model>;
   repositories: Array<Repository>;
   storages: Array<Storage>;
+};
+
+
+export type QueryGetModelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetRepositoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetStorageArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type Repository = {
@@ -159,6 +190,13 @@ export type ModelsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type ModelsQuery = { __typename?: 'Query', models: Array<{ __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string } | null }> };
 
+export type GetModelQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetModelQuery = { __typename?: 'Query', getModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string } | null } };
+
 export type AddModelMutationVariables = Exact<{
   input: AddModelInput;
 }>;
@@ -178,6 +216,13 @@ export type RepositoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type RepositoriesQuery = { __typename?: 'Query', repositories: Array<{ __typename?: 'Repository', id: string, type: RepositoryType, displayName: string, owner: string, name: string, url: string }> };
 
+export type GetRepositoryQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetRepositoryQuery = { __typename?: 'Query', getRepository: { __typename?: 'Repository', id: string, type: RepositoryType, displayName: string, owner: string, name: string, url: string } };
+
 export type AddRepositoryMutationVariables = Exact<{
   input: AddRepositoryInput;
 }>;
@@ -196,6 +241,13 @@ export type StoragesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type StoragesQuery = { __typename?: 'Query', storages: Array<{ __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus }> };
+
+export type GetStorageQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetStorageQuery = { __typename?: 'Query', getStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus } };
 
 export type AddStorageMutationVariables = Exact<{
   input: AddStorageInput;
@@ -264,6 +316,59 @@ export type ModelsQueryHookResult = ReturnType<typeof useModelsQuery>;
 export type ModelsLazyQueryHookResult = ReturnType<typeof useModelsLazyQuery>;
 export type ModelsSuspenseQueryHookResult = ReturnType<typeof useModelsSuspenseQuery>;
 export type ModelsQueryResult = Apollo.QueryResult<ModelsQuery, ModelsQueryVariables>;
+export const GetModelDocument = gql`
+    query getModel($id: ID!) {
+  getModel(id: $id) {
+    id
+    type
+    status
+    displayName
+    huggingFace {
+      organization
+      name
+    }
+  }
+}
+    `;
+export type GetModelComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<GetModelQuery, GetModelQueryVariables>, 'query'> & ({ variables: GetModelQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const GetModelComponent = (props: GetModelComponentProps) => (
+      <ApolloReactComponents.Query<GetModelQuery, GetModelQueryVariables> query={GetModelDocument} {...props} />
+    );
+    
+
+/**
+ * __useGetModelQuery__
+ *
+ * To run a query within a React component, call `useGetModelQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetModelQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetModelQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetModelQuery(baseOptions: Apollo.QueryHookOptions<GetModelQuery, GetModelQueryVariables> & ({ variables: GetModelQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetModelQuery, GetModelQueryVariables>(GetModelDocument, options);
+      }
+export function useGetModelLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetModelQuery, GetModelQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetModelQuery, GetModelQueryVariables>(GetModelDocument, options);
+        }
+export function useGetModelSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetModelQuery, GetModelQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetModelQuery, GetModelQueryVariables>(GetModelDocument, options);
+        }
+export type GetModelQueryHookResult = ReturnType<typeof useGetModelQuery>;
+export type GetModelLazyQueryHookResult = ReturnType<typeof useGetModelLazyQuery>;
+export type GetModelSuspenseQueryHookResult = ReturnType<typeof useGetModelSuspenseQuery>;
+export type GetModelQueryResult = Apollo.QueryResult<GetModelQuery, GetModelQueryVariables>;
 export const AddModelDocument = gql`
     mutation addModel($input: AddModelInput!) {
   addModel(input: $input) {
@@ -406,6 +511,57 @@ export type RepositoriesQueryHookResult = ReturnType<typeof useRepositoriesQuery
 export type RepositoriesLazyQueryHookResult = ReturnType<typeof useRepositoriesLazyQuery>;
 export type RepositoriesSuspenseQueryHookResult = ReturnType<typeof useRepositoriesSuspenseQuery>;
 export type RepositoriesQueryResult = Apollo.QueryResult<RepositoriesQuery, RepositoriesQueryVariables>;
+export const GetRepositoryDocument = gql`
+    query getRepository($id: ID!) {
+  getRepository(id: $id) {
+    id
+    type
+    displayName
+    owner
+    name
+    url
+  }
+}
+    `;
+export type GetRepositoryComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<GetRepositoryQuery, GetRepositoryQueryVariables>, 'query'> & ({ variables: GetRepositoryQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const GetRepositoryComponent = (props: GetRepositoryComponentProps) => (
+      <ApolloReactComponents.Query<GetRepositoryQuery, GetRepositoryQueryVariables> query={GetRepositoryDocument} {...props} />
+    );
+    
+
+/**
+ * __useGetRepositoryQuery__
+ *
+ * To run a query within a React component, call `useGetRepositoryQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetRepositoryQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetRepositoryQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetRepositoryQuery(baseOptions: Apollo.QueryHookOptions<GetRepositoryQuery, GetRepositoryQueryVariables> & ({ variables: GetRepositoryQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetRepositoryQuery, GetRepositoryQueryVariables>(GetRepositoryDocument, options);
+      }
+export function useGetRepositoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetRepositoryQuery, GetRepositoryQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetRepositoryQuery, GetRepositoryQueryVariables>(GetRepositoryDocument, options);
+        }
+export function useGetRepositorySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetRepositoryQuery, GetRepositoryQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetRepositoryQuery, GetRepositoryQueryVariables>(GetRepositoryDocument, options);
+        }
+export type GetRepositoryQueryHookResult = ReturnType<typeof useGetRepositoryQuery>;
+export type GetRepositoryLazyQueryHookResult = ReturnType<typeof useGetRepositoryLazyQuery>;
+export type GetRepositorySuspenseQueryHookResult = ReturnType<typeof useGetRepositorySuspenseQuery>;
+export type GetRepositoryQueryResult = Apollo.QueryResult<GetRepositoryQuery, GetRepositoryQueryVariables>;
 export const AddRepositoryDocument = gql`
     mutation addRepository($input: AddRepositoryInput!) {
   addRepository(input: $input) {
@@ -542,6 +698,55 @@ export type StoragesQueryHookResult = ReturnType<typeof useStoragesQuery>;
 export type StoragesLazyQueryHookResult = ReturnType<typeof useStoragesLazyQuery>;
 export type StoragesSuspenseQueryHookResult = ReturnType<typeof useStoragesSuspenseQuery>;
 export type StoragesQueryResult = Apollo.QueryResult<StoragesQuery, StoragesQueryVariables>;
+export const GetStorageDocument = gql`
+    query getStorage($id: ID!) {
+  getStorage(id: $id) {
+    id
+    type
+    name
+    status
+  }
+}
+    `;
+export type GetStorageComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<GetStorageQuery, GetStorageQueryVariables>, 'query'> & ({ variables: GetStorageQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const GetStorageComponent = (props: GetStorageComponentProps) => (
+      <ApolloReactComponents.Query<GetStorageQuery, GetStorageQueryVariables> query={GetStorageDocument} {...props} />
+    );
+    
+
+/**
+ * __useGetStorageQuery__
+ *
+ * To run a query within a React component, call `useGetStorageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetStorageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetStorageQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetStorageQuery(baseOptions: Apollo.QueryHookOptions<GetStorageQuery, GetStorageQueryVariables> & ({ variables: GetStorageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetStorageQuery, GetStorageQueryVariables>(GetStorageDocument, options);
+      }
+export function useGetStorageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetStorageQuery, GetStorageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetStorageQuery, GetStorageQueryVariables>(GetStorageDocument, options);
+        }
+export function useGetStorageSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetStorageQuery, GetStorageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetStorageQuery, GetStorageQueryVariables>(GetStorageDocument, options);
+        }
+export type GetStorageQueryHookResult = ReturnType<typeof useGetStorageQuery>;
+export type GetStorageLazyQueryHookResult = ReturnType<typeof useGetStorageLazyQuery>;
+export type GetStorageSuspenseQueryHookResult = ReturnType<typeof useGetStorageSuspenseQuery>;
+export type GetStorageQueryResult = Apollo.QueryResult<GetStorageQuery, GetStorageQueryVariables>;
 export const AddStorageDocument = gql`
     mutation addStorage($input: AddStorageInput!) {
   addStorage(input: $input) {

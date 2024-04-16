@@ -28,6 +28,14 @@ class StorageApi {
         return storages;
     }
 
+    getStorage(id: string) {
+        const storage = storages.find(storage => storage.id === id);
+        if (!storage) {
+            throw new Error('Storage not found');
+        }
+        return storage;
+    }
+
     addStorage(input: any) {
         const newStorage: Storage = {
             id: String(storages.length + 1),

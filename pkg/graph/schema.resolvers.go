@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/encoder-run/operator/pkg/graph/model"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/models"
@@ -16,6 +17,11 @@ import (
 // AddModel is the resolver for the addModel field.
 func (r *mutationResolver) AddModel(ctx context.Context, input model.AddModelInput) (*model.Model, error) {
 	return models.Add(ctx, input)
+}
+
+// DeployModel is the resolver for the deployModel field.
+func (r *mutationResolver) DeployModel(ctx context.Context, input model.DeployModelInput) (*model.Model, error) {
+	panic(fmt.Errorf("not implemented: DeployModel - deployModel"))
 }
 
 // DeleteModel is the resolver for the deleteModel field.
@@ -48,14 +54,29 @@ func (r *queryResolver) Models(ctx context.Context) ([]*model.Model, error) {
 	return models.List(ctx)
 }
 
+// GetModel is the resolver for the getModel field.
+func (r *queryResolver) GetModel(ctx context.Context, id string) (*model.Model, error) {
+	return models.Get(ctx, id)
+}
+
 // Repositories is the resolver for the repositories field.
 func (r *queryResolver) Repositories(ctx context.Context) ([]*model.Repository, error) {
 	return repositories.List(ctx)
 }
 
+// GetRepository is the resolver for the getRepository field.
+func (r *queryResolver) GetRepository(ctx context.Context, id string) (*model.Repository, error) {
+	return repositories.Get(ctx, id)
+}
+
 // Storages is the resolver for the storages field.
 func (r *queryResolver) Storages(ctx context.Context) ([]*model.Storage, error) {
 	return storage.List(ctx)
+}
+
+// GetStorage is the resolver for the getStorage field.
+func (r *queryResolver) GetStorage(ctx context.Context, id string) (*model.Storage, error) {
+	return storage.Get(ctx, id)
 }
 
 // Mutation returns MutationResolver implementation.

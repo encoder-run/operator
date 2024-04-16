@@ -9,6 +9,17 @@ query repositories {
     }
 }
 
+query getRepository($id: ID!) {
+    getRepository(id: $id) {
+        id
+        type
+        displayName
+        owner
+        name
+        url
+    }
+}
+
 mutation addRepository($input: AddRepositoryInput!) {
     addRepository(input: $input) {
         id

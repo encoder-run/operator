@@ -57,6 +57,14 @@ class RepositoryApi {
         return repositories;
     }
 
+    getRepository(id: string) {
+        const repo = repositories.find(repo => repo.id === id);
+        if (!repo) {
+            throw new Error('Repository not found');
+        }
+        return repo;
+    }
+
     addRepository(input: AddRepositoryInput) {
         const newRepo: Repository = {
             id: String(repositories.length + 1),

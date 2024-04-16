@@ -11,6 +11,19 @@ query models {
     }
 }
 
+query getModel($id: ID!) {
+    getModel(id: $id) {
+        id
+        type
+        status
+        displayName
+        huggingFace {
+            organization
+            name
+        }
+    }
+}
+
 mutation addModel($input: AddModelInput!) {
     addModel(input: $input) {
         id

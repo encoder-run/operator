@@ -26,6 +26,14 @@ class ModelApi {
         return models;
     }
 
+    getModel(id: string) {
+        const model = models.find(model => model.id === id);
+        if (!model) {
+            throw new Error('Model not found');
+        }
+        return model;
+    }
+
     addModel(input: any) {
         const newModel: Model = {
             id: String(models.length + 1),

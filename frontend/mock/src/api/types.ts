@@ -31,6 +31,13 @@ export type AddStorageInput = {
   type: StorageType;
 };
 
+export type DeployModelInput = {
+  cpu: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  memory: Scalars['String']['input'];
+  replicas: Scalars['Int']['input'];
+};
+
 export type HuggingFace = {
   __typename?: 'HuggingFace';
   name: Scalars['String']['output'];
@@ -72,6 +79,7 @@ export type Mutation = {
   deleteModel: Model;
   deleteRepository: Repository;
   deleteStorage: Storage;
+  deployModel: Model;
 };
 
 
@@ -104,11 +112,34 @@ export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type MutationDeployModelArgs = {
+  input: DeployModelInput;
+};
+
 export type Query = {
   __typename?: 'Query';
+  getModel: Model;
+  getRepository: Repository;
+  getStorage: Storage;
   models: Array<Model>;
   repositories: Array<Repository>;
   storages: Array<Storage>;
+};
+
+
+export type QueryGetModelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetRepositoryArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetStorageArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type Repository = {

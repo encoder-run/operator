@@ -70,8 +70,11 @@ type Storage {
 
 type Query {
   models: [Model!]!
+  getModel(id: ID!): Model!
   repositories: [Repository!]!
+  getRepository(id: ID!): Repository!
   storages: [Storage!]!
+  getStorage(id: ID!): Storage!
 }
 
 input HuggingFaceInput {
@@ -84,6 +87,13 @@ input AddModelInput {
   huggingFace: HuggingFaceInput
 }
 
+input DeployModelInput {
+  id: ID!
+  replicas: Int!
+  cpu: String!
+  memory: String!
+}
+
 input AddStorageInput {
   type: StorageType!
   name: String!
@@ -91,6 +101,7 @@ input AddStorageInput {
 
 type Mutation {
   addModel(input: AddModelInput!): Model!
+  deployModel(input: DeployModelInput!): Model!
   deleteModel(id: ID!): Model!
   addRepository(input: AddRepositoryInput!): Repository!
   deleteRepository(id: ID!): Repository!

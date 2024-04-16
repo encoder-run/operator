@@ -6,6 +6,8 @@ import ModelsPage from "../pages/models";
 import StoragePage from "../pages/storage";
 import ModelDetailsPage from "../pages/model-details";
 import CodeSearchPage from "../pages/search";
+import RepositoryDetailsPage from "../pages/repository-details";
+import StorageDetailsPage from "../pages/storage-details";
 
 export const router = createBrowserRouter([
     {
@@ -35,7 +37,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "repositories/:repositoryId",
-                element: <></>
+                element: <RepositoryDetailsPage />
             },
             {
                 path: "storage",
@@ -43,7 +45,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "storage/:storageId",
-                element: <></>
+                element: <StorageDetailsPage />
             }
         ]
     },

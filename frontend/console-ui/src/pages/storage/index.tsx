@@ -32,7 +32,7 @@ export default function StoragePage() {
                     color="primary"
                     aria-label="go to details"
                     size="small"
-                    onClick={() => navigate(`/storages/${params.id}`)} // Adjust the path as needed
+                    onClick={() => navigate(`/storage/${params.id}`)} // Adjust the path as needed
                 >
                     <LaunchIcon />
                 </IconButton>,

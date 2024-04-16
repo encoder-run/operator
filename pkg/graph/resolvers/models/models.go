@@ -37,6 +37,28 @@ func List(ctx context.Context) ([]*model.Model, error) {
 	return models, nil
 }
 
+func Get(ctx context.Context, id string) (*model.Model, error) {
+	// Get the controller-runtime client from the context.
+	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
+	if !ok {
+		return nil, fmt.Errorf("controller-runtime client not found in context")
+	}
+
+	// Get the model.
+	modelCRD := &v1alpha1.Model{}
+	if err := ctrlClient.Get(ctx, client.ObjectKey{Namespace: "default", Name: id}, modelCRD); err != nil {
+		return nil, err
+	}
+
+	// Convert the model to the model.
+	m, err := converters.ModelCRDToModel(modelCRD)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
 func Add(ctx context.Context, input model.AddModelInput) (*model.Model, error) {
 	// Get the controller-runtime client from the context.
 	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
@@ -62,6 +84,10 @@ func Add(ctx context.Context, input model.AddModelInput) (*model.Model, error) {
 	}
 
 	return m, nil
+}
+
+func Deploy(ctx context.Context, input model.DeployModelInput) (*model.Model, error) {
+	return nil, nil
 }
 
 func Delete(ctx context.Context, id string) (*model.Model, error) {

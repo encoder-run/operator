@@ -37,6 +37,23 @@ func List(ctx context.Context) ([]*model.Repository, error) {
 	return repos, nil
 }
 
+func Get(ctx context.Context, id string) (*model.Repository, error) {
+	// Get the controller-runtime client from the context.
+	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
+	if !ok {
+		return nil, fmt.Errorf("controller-runtime client not found in context")
+	}
+
+	// Get the repository by name.
+	repo := &v1alpha1.Repository{}
+	if err := ctrlClient.Get(ctx, client.ObjectKey{Name: id, Namespace: "default"}, repo); err != nil {
+		return nil, err
+	}
+
+	// Convert the repository to the model.
+	return converters.RepositoryCRDToModel(repo)
+}
+
 func Add(ctx context.Context, input model.AddRepositoryInput) (*model.Repository, error) {
 	// Get the controller-runtime client from the context.
 	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)

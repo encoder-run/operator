@@ -22,11 +22,20 @@ const resolvers = {
         repositories: (parent, args, context, info) => {
             return repositoryApi.getRepositories();
         },
+        getRepository: (parent, args, context, info) => { 
+            return repositoryApi.getRepository(args.id);
+        },
         models: (parent, args, context, info) => {
             return modelApi.getModels();
         },
+        getModel: (parent, args, context, info) => {
+            return modelApi.getModel(args.id);
+        },
         storages: (parent, args, context, info) => {
             return storageApi.getStorages();
+        },
+        getStorage: (parent, args, context, info) => {
+            return storageApi.getStorage(args.id);
         }
     },
     Mutation: {
