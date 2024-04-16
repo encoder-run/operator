@@ -1,0 +1,28 @@
+{
+  "name": "mock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "compile": "tsc",
+    "start": "npm run generate && npm run compile && node ./dist/src/index.js",
+    "generate": "graphql-codegen"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@apollo/server": "^4.10.0",
+    "@graphql-codegen/cli": "^5.0.2",
+    "@graphql-codegen/typescript-react-apollo": "^4.3.0",
+    "@graphql-tools/load-files": "^7.0.0",
+    "date-fns": "^3.3.1",
+    "graphql": "^16.8.1"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@types/node": "^20.11.19",
+    "typescript": "^5.4.5"
+  }
+}

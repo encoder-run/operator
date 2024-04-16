@@ -34,7 +34,19 @@ spec:
           spec:
             description: ModelSpec defines the desired state of Model
             properties:
+              huggingface:
+                description: Hugging Face model spec
+                properties:
+                  name:
+                    type: string
+                  organization:
+                    type: string
+                required:
+                - name
+                - organization
+                type: object
               type:
+                description: ModelType defines the type of model
                 type: string
             required:
             - type

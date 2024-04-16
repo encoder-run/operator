@@ -1,0 +1,32 @@
+query repositories {
+    repositories {
+        id
+        type
+        displayName
+        owner
+        name
+        url
+    }
+}
+
+mutation addRepository($input: AddRepositoryInput!) {
+    addRepository(input: $input) {
+        id
+        type
+        displayName
+        owner
+        name
+        url
+    }
+}
+
+mutation deleteRepository($id: ID!) {
+    deleteRepository(id: $id) {
+        id
+        type
+        displayName
+        owner
+        name
+        url
+    }
+}

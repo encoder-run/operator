@@ -12,8 +12,10 @@ RUN go mod download && go mod verify
 
 # Copy the source from the current directory to the Working Directory inside the container
 COPY cmd/gateway/ .
-COPY graph/ graph/
-COPY pkg/resolvers/ pkg/resolvers/
+COPY cmd/gateway/middleware/ cmd/gateway/middleware/
+COPY pkg/graph/ pkg/graph/
+COPY pkg/common/ pkg/common/
+COPY api/ api/
 
 # Build the Go app
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /main .
@@ -24,3 +26,6 @@ COPY --from=base /main .
 
 # Command to run the executable
 CMD ["./main"]
+
+# Expose port 8080 to the outside once the container is running
+EXPOSE 8080

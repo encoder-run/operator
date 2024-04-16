@@ -1,0 +1,26 @@
+query storages {
+    storages {
+        id
+        type
+        name
+        status
+    }
+}
+
+mutation addStorage($input: AddStorageInput!) {
+    addStorage(input: $input) {
+        id
+        type
+        name
+        status
+    }
+}
+
+mutation deleteStorage($id: ID!) {
+    deleteStorage(id: $id) {
+        id
+        type
+        name
+        status
+    }
+}

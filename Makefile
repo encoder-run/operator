@@ -6,6 +6,8 @@ CONTROLLER_MANAGER_IMG ?= controller
 CONTROLLER_MANAGER_IMG_VERSION ?= 0.0.1
 GATEWAY_IMG ?= gateway
 GATEWAY_IMG_VERSION ?= 0.0.1
+CONSOLE_UI_IMG ?= console-ui
+CONSOLE_UI_IMG_VERSION ?= 0.0.1
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.28.0
 
@@ -94,6 +96,13 @@ docker-push: ## Push docker image with the manager.
 gateway-build: ## Build the gateway Docker image.
 	$(CONTAINER_TOOL) build -t ${GATEWAY_IMG}:${GATEWAY_IMG_VERSION} -f cmd/gateway/Dockerfile .
 
+.PHONY: gateway-push
+gateway-push: ## Push the gateway Docker image.
+	$(CONTAINER_TOOL) push ${GATEWAY_IMG}:${GATEWAY_IMG_VERSION}
+
+.PHONY: console-ui-build
+console-ui-build: ## Build the console-ui Docker image.
+	$(CONTAINER_TOOL) build -t ${CONSOLE_UI_IMG}:${CONSOLE_UI_IMG_VERSION} -f frontend/console-ui/Dockerfile frontend/console-ui
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
 # - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
@@ -126,11 +135,16 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: manifests kustomize docker-build gateway-build console-ui-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+	make kind-delete
+	make kind
+	make install
 	kind load docker-image $(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(GATEWAY_IMG):$(GATEWAY_IMG_VERSION) --name=$(CLUSTER_NAME)
+	kind load docker-image $(CONSOLE_UI_IMG):$(CONSOLE_UI_IMG_VERSION) --name=$(CLUSTER_NAME)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION)
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
+	make default-admin
 
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
@@ -177,3 +191,11 @@ $(ENVTEST): $(LOCALBIN)
 kind: # Create a kind cluster
 	kind create cluster --config=config/kind/cluster.yaml
 	kubectl apply -f config/kind/ingress-nginx.yaml
+
+.PHONY: kind-delete
+kind-delete: # Delete the kind cluster
+	kind delete cluster --name $(CLUSTER_NAME)
+
+.PHONY: default-admin
+default-admin: # Create a default admin user
+	kubectl apply -f config/samples/admin_rbac.yaml

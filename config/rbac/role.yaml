@@ -7,6 +7,32 @@ rules:
 - apiGroups:
   - cloud.encoder.run
   resources:
+  - modeldeployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - modeldeployments/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - modeldeployments/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
   - models
   verbs:
   - create
@@ -26,6 +52,58 @@ rules:
   - cloud.encoder.run
   resources:
   - models/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - repositories
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - repositories/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - repositories/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - storages
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - storages/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - storages/status
   verbs:
   - get
   - patch

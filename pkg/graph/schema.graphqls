@@ -1,0 +1,99 @@
+enum ModelType {
+  HUGGINGFACE
+  OPENAI
+  EXTERNAL
+}
+
+enum RepositoryType {
+  GITHUB
+  GITLAB
+  BITBUCKET
+}
+
+enum StorageType {
+  REDIS
+  POSTGRES
+  ELASTICSEARCH
+}
+
+enum ModelStatus {
+  NOT_DEPLOYED
+  DEPLOYING
+  READY
+  ERROR
+}
+
+enum StorageStatus {
+  NOT_DEPLOYED
+  DEPLOYING
+  READY
+  ERROR
+}
+
+type Repository {
+  id: ID!
+  type: RepositoryType!
+  displayName: String!
+  owner: String!
+  name: String!
+  url: String!
+}
+
+input AddRepositoryInput {
+  # url or owner and name should be provided
+  url: String
+
+  type: RepositoryType
+  owner: String
+  name: String
+}
+
+type HuggingFace {
+  organization: String!
+  name: String!
+}
+
+type Model {
+  id: ID!
+  type: ModelType!
+  displayName: String!
+  status: ModelStatus!
+  huggingFace: HuggingFace
+}
+
+type Storage {
+  id: ID!
+  name: String!
+  type: StorageType!
+  status: StorageStatus!
+}
+
+type Query {
+  models: [Model!]!
+  repositories: [Repository!]!
+  storages: [Storage!]!
+}
+
+input HuggingFaceInput {
+  organization: String!
+  name: String!
+}
+
+input AddModelInput {
+  type: ModelType!
+  huggingFace: HuggingFaceInput
+}
+
+input AddStorageInput {
+  type: StorageType!
+  name: String!
+}
+
+type Mutation {
+  addModel(input: AddModelInput!): Model!
+  deleteModel(id: ID!): Model!
+  addRepository(input: AddRepositoryInput!): Repository!
+  deleteRepository(id: ID!): Repository!
+  addStorage(input: AddStorageInput!): Storage!
+  deleteStorage(id: ID!): Storage!
+}

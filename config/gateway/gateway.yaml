@@ -12,12 +12,52 @@ spec:
       labels:
         app: gateway
     spec:
+      serviceAccountName: operator-gateway-sa
       containers:
       - name: gateway
         image: gateway:0.0.1
         ports:
         - containerPort: 8080
           name: http
-        env:
-        - name: ENV
-          value: "local"
+---
+# Service for the gateway
+apiVersion: v1
+kind: Service
+metadata:
+  name: gateway
+spec:
+  type: NodePort
+  selector:
+    app: gateway
+  ports:
+  - protocol: TCP
+    port: 32080
+    targetPort: 8080
+    nodePort: 32080
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: gateway-cluster-role
+rules:
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["impersonate"]
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: gateway-sa
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: gateway-cluster-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: operator-gateway-cluster-role
+subjects:
+- kind: ServiceAccount
+  name: operator-gateway-sa
+  namespace: encoder-run

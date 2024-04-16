@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: console-ui
+  template:
+    metadata:
+      labels:
+        app: console-ui
+    spec:
+      containers:
+      - name: console-ui
+        image: console-ui:0.0.1
+        ports:
+        - containerPort: 8081
+          name: http
+---
+# Service for the console-ui
+apiVersion: v1
+kind: Service
+metadata:
+  name: console-ui
+spec:
+  type: NodePort
+  selector:
+    app: console-ui
+  ports:
+  - protocol: TCP
+    port: 32081
+    targetPort: 8081
+    nodePort: 32081

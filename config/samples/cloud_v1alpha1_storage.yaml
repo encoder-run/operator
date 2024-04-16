@@ -1,0 +1,12 @@
+apiVersion: cloud.encoder.run/v1alpha1
+kind: Storage
+metadata:
+  labels:
+    app.kubernetes.io/name: storage
+    app.kubernetes.io/instance: storage-sample
+    app.kubernetes.io/part-of: operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: operator
+  name: storage-sample
+spec:
+  # TODO(user): Add fields here

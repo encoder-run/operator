@@ -1,0 +1,39 @@
+query models {
+    models {
+        id
+        type
+        status
+        displayName
+        huggingFace {
+            organization
+            name
+        }
+    }
+}
+
+mutation addModel($input: AddModelInput!) {
+    addModel(input: $input) {
+        id
+        type
+        status
+        displayName
+        huggingFace {
+            organization
+            name
+        }
+    }
+}
+
+mutation deleteModel($id: ID!) {
+    deleteModel(id: $id) {
+        id
+        type
+        status
+        displayName
+        huggingFace {
+            organization
+            name
+        }
+    }
+}
+

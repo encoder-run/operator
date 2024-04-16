@@ -20,22 +20,27 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// ModelType defines the type of model
 type ModelType string
 
 const (
-	HuggingFaceModelType ModelType = "HUGGING_FACE"
-	ExternalModelType    ModelType = "EXTERNAL"
+	// ModelTypeHuggingFace represents a Hugging Face model
+	ModelTypeHuggingFace ModelType = "HUGGINGFACE"
+	// ModelTypeExternal represents an external model
+	ModelTypeExternal ModelType = "EXTERNAL"
 )
 
 // ModelSpec defines the desired state of Model
 type ModelSpec struct {
 	Type ModelType `json:"type"`
+	// Hugging Face model spec
+	HuggingFace *HuggingFaceModelSpec `json:"huggingface,omitempty"`
 }
 
 // HuggingFaceModelSpec defines the desired state of HuggingFaceModel
 type HuggingFaceModelSpec struct {
 	Organization string `json:"organization"`
-	Model        string `json:"model"`
+	Name         string `json:"name"`
 }
 
 // ModelStatus defines the observed state of Model
