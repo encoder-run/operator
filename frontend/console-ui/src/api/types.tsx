@@ -20,6 +20,12 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AddModelDeploymentInput = {
+  cpu: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  memory: Scalars['String']['input'];
+};
+
 export type AddModelInput = {
   huggingFace?: InputMaybe<HuggingFaceInput>;
   type: ModelType;
@@ -37,31 +43,34 @@ export type AddStorageInput = {
   type: StorageType;
 };
 
-export type DeployModelInput = {
-  cpu: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
-  memory: Scalars['String']['input'];
-  replicas: Scalars['Int']['input'];
-};
-
 export type HuggingFace = {
   __typename?: 'HuggingFace';
+  maxSequenceLength: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   organization: Scalars['String']['output'];
 };
 
 export type HuggingFaceInput = {
+  maxSequenceLength: Scalars['Int']['input'];
   name: Scalars['String']['input'];
   organization: Scalars['String']['input'];
 };
 
 export type Model = {
   __typename?: 'Model';
+  deployment?: Maybe<ModelDeployment>;
   displayName: Scalars['String']['output'];
   huggingFace?: Maybe<HuggingFace>;
   id: Scalars['ID']['output'];
   status: ModelStatus;
   type: ModelType;
+};
+
+export type ModelDeployment = {
+  __typename?: 'ModelDeployment';
+  cpu: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  memory: Scalars['String']['output'];
 };
 
 export enum ModelStatus {
@@ -80,17 +89,22 @@ export enum ModelType {
 export type Mutation = {
   __typename?: 'Mutation';
   addModel: Model;
+  addModelDeployment: Model;
   addRepository: Repository;
   addStorage: Storage;
   deleteModel: Model;
   deleteRepository: Repository;
   deleteStorage: Storage;
-  deployModel: Model;
 };
 
 
 export type MutationAddModelArgs = {
   input: AddModelInput;
+};
+
+
+export type MutationAddModelDeploymentArgs = {
+  input: AddModelDeploymentInput;
 };
 
 
@@ -116,11 +130,6 @@ export type MutationDeleteRepositoryArgs = {
 
 export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
-};
-
-
-export type MutationDeployModelArgs = {
-  input: DeployModelInput;
 };
 
 export type Query = {
@@ -188,28 +197,35 @@ export enum StorageType {
 export type ModelsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ModelsQuery = { __typename?: 'Query', models: Array<{ __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string } | null }> };
+export type ModelsQuery = { __typename?: 'Query', models: Array<{ __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string, maxSequenceLength: number } | null, deployment?: { __typename?: 'ModelDeployment', enabled: boolean, cpu: string, memory: string } | null }> };
 
 export type GetModelQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetModelQuery = { __typename?: 'Query', getModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string } | null } };
+export type GetModelQuery = { __typename?: 'Query', getModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string, maxSequenceLength: number } | null, deployment?: { __typename?: 'ModelDeployment', enabled: boolean, cpu: string, memory: string } | null } };
 
 export type AddModelMutationVariables = Exact<{
   input: AddModelInput;
 }>;
 
 
-export type AddModelMutation = { __typename?: 'Mutation', addModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string } | null } };
+export type AddModelMutation = { __typename?: 'Mutation', addModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string, maxSequenceLength: number } | null, deployment?: { __typename?: 'ModelDeployment', enabled: boolean, cpu: string, memory: string } | null } };
+
+export type AddModelDeploymentMutationVariables = Exact<{
+  input: AddModelDeploymentInput;
+}>;
+
+
+export type AddModelDeploymentMutation = { __typename?: 'Mutation', addModelDeployment: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string, maxSequenceLength: number } | null, deployment?: { __typename?: 'ModelDeployment', enabled: boolean, cpu: string, memory: string } | null } };
 
 export type DeleteModelMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteModelMutation = { __typename?: 'Mutation', deleteModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string } | null } };
+export type DeleteModelMutation = { __typename?: 'Mutation', deleteModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string, maxSequenceLength: number } | null, deployment?: { __typename?: 'ModelDeployment', enabled: boolean, cpu: string, memory: string } | null } };
 
 export type RepositoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -274,6 +290,12 @@ export const ModelsDocument = gql`
     huggingFace {
       organization
       name
+      maxSequenceLength
+    }
+    deployment {
+      enabled
+      cpu
+      memory
     }
   }
 }
@@ -326,6 +348,12 @@ export const GetModelDocument = gql`
     huggingFace {
       organization
       name
+      maxSequenceLength
+    }
+    deployment {
+      enabled
+      cpu
+      memory
     }
   }
 }
@@ -379,6 +407,12 @@ export const AddModelDocument = gql`
     huggingFace {
       organization
       name
+      maxSequenceLength
+    }
+    deployment {
+      enabled
+      cpu
+      memory
     }
   }
 }
@@ -415,6 +449,58 @@ export function useAddModelMutation(baseOptions?: Apollo.MutationHookOptions<Add
 export type AddModelMutationHookResult = ReturnType<typeof useAddModelMutation>;
 export type AddModelMutationResult = Apollo.MutationResult<AddModelMutation>;
 export type AddModelMutationOptions = Apollo.BaseMutationOptions<AddModelMutation, AddModelMutationVariables>;
+export const AddModelDeploymentDocument = gql`
+    mutation addModelDeployment($input: AddModelDeploymentInput!) {
+  addModelDeployment(input: $input) {
+    id
+    type
+    status
+    displayName
+    huggingFace {
+      organization
+      name
+      maxSequenceLength
+    }
+    deployment {
+      enabled
+      cpu
+      memory
+    }
+  }
+}
+    `;
+export type AddModelDeploymentMutationFn = Apollo.MutationFunction<AddModelDeploymentMutation, AddModelDeploymentMutationVariables>;
+export type AddModelDeploymentComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<AddModelDeploymentMutation, AddModelDeploymentMutationVariables>, 'mutation'>;
+
+    export const AddModelDeploymentComponent = (props: AddModelDeploymentComponentProps) => (
+      <ApolloReactComponents.Mutation<AddModelDeploymentMutation, AddModelDeploymentMutationVariables> mutation={AddModelDeploymentDocument} {...props} />
+    );
+    
+
+/**
+ * __useAddModelDeploymentMutation__
+ *
+ * To run a mutation, you first call `useAddModelDeploymentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddModelDeploymentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addModelDeploymentMutation, { data, loading, error }] = useAddModelDeploymentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddModelDeploymentMutation(baseOptions?: Apollo.MutationHookOptions<AddModelDeploymentMutation, AddModelDeploymentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddModelDeploymentMutation, AddModelDeploymentMutationVariables>(AddModelDeploymentDocument, options);
+      }
+export type AddModelDeploymentMutationHookResult = ReturnType<typeof useAddModelDeploymentMutation>;
+export type AddModelDeploymentMutationResult = Apollo.MutationResult<AddModelDeploymentMutation>;
+export type AddModelDeploymentMutationOptions = Apollo.BaseMutationOptions<AddModelDeploymentMutation, AddModelDeploymentMutationVariables>;
 export const DeleteModelDocument = gql`
     mutation deleteModel($id: ID!) {
   deleteModel(id: $id) {
@@ -425,6 +511,12 @@ export const DeleteModelDocument = gql`
     huggingFace {
       organization
       name
+      maxSequenceLength
+    }
+    deployment {
+      enabled
+      cpu
+      memory
     }
   }
 }

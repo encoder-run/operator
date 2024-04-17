@@ -6,7 +6,6 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/encoder-run/operator/pkg/graph/model"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/models"
@@ -19,9 +18,9 @@ func (r *mutationResolver) AddModel(ctx context.Context, input model.AddModelInp
 	return models.Add(ctx, input)
 }
 
-// DeployModel is the resolver for the deployModel field.
-func (r *mutationResolver) DeployModel(ctx context.Context, input model.DeployModelInput) (*model.Model, error) {
-	panic(fmt.Errorf("not implemented: DeployModel - deployModel"))
+// AddModelDeployment is the resolver for the addModelDeployment field.
+func (r *mutationResolver) AddModelDeployment(ctx context.Context, input model.AddModelDeploymentInput) (*model.Model, error) {
+	return models.AddDeployment(ctx, input)
 }
 
 // DeleteModel is the resolver for the deleteModel field.

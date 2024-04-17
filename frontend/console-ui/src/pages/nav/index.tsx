@@ -5,6 +5,7 @@ import { WrenchIcon } from "@heroicons/react/24/outline";
 import { ServerStackIcon } from "@heroicons/react/24/outline";
 import { CodeBracketSquareIcon } from "@heroicons/react/24/outline";
 import { VariableIcon } from "@heroicons/react/24/outline";
+import { CubeTransparentIcon } from "@heroicons/react/24/outline";
 import logoImage from '../../assets/logo.png';
 
 export default function Sidebar() {
@@ -54,6 +55,16 @@ export default function Sidebar() {
                                     <WrenchIcon />
                                 </Box>
                                 <ListItemText sx={{ p: 1 }} primary="API" />
+                            </ListItemButton>
+                        </ListItem>
+                        <ListItem disablePadding>
+                            <ListItemButton component={Link} to="/pipelines">
+                                <Box
+                                    width={24}
+                                    height={24}>
+                                    <CubeTransparentIcon />
+                                </Box>
+                                <ListItemText sx={{ p: 1 }} primary="Pipelines" />
                             </ListItemButton>
                         </ListItem>
                         <ListItem disablePadding>

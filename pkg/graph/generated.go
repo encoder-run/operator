@@ -48,11 +48,13 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	HuggingFace struct {
-		Name         func(childComplexity int) int
-		Organization func(childComplexity int) int
+		MaxSequenceLength func(childComplexity int) int
+		Name              func(childComplexity int) int
+		Organization      func(childComplexity int) int
 	}
 
 	Model struct {
+		Deployment  func(childComplexity int) int
 		DisplayName func(childComplexity int) int
 		HuggingFace func(childComplexity int) int
 		ID          func(childComplexity int) int
@@ -60,14 +62,20 @@ type ComplexityRoot struct {
 		Type        func(childComplexity int) int
 	}
 
+	ModelDeployment struct {
+		CPU     func(childComplexity int) int
+		Enabled func(childComplexity int) int
+		Memory  func(childComplexity int) int
+	}
+
 	Mutation struct {
-		AddModel         func(childComplexity int, input model.AddModelInput) int
-		AddRepository    func(childComplexity int, input model.AddRepositoryInput) int
-		AddStorage       func(childComplexity int, input model.AddStorageInput) int
-		DeleteModel      func(childComplexity int, id string) int
-		DeleteRepository func(childComplexity int, id string) int
-		DeleteStorage    func(childComplexity int, id string) int
-		DeployModel      func(childComplexity int, input model.DeployModelInput) int
+		AddModel           func(childComplexity int, input model.AddModelInput) int
+		AddModelDeployment func(childComplexity int, input model.AddModelDeploymentInput) int
+		AddRepository      func(childComplexity int, input model.AddRepositoryInput) int
+		AddStorage         func(childComplexity int, input model.AddStorageInput) int
+		DeleteModel        func(childComplexity int, id string) int
+		DeleteRepository   func(childComplexity int, id string) int
+		DeleteStorage      func(childComplexity int, id string) int
 	}
 
 	Query struct {
@@ -98,7 +106,7 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	AddModel(ctx context.Context, input model.AddModelInput) (*model.Model, error)
-	DeployModel(ctx context.Context, input model.DeployModelInput) (*model.Model, error)
+	AddModelDeployment(ctx context.Context, input model.AddModelDeploymentInput) (*model.Model, error)
 	DeleteModel(ctx context.Context, id string) (*model.Model, error)
 	AddRepository(ctx context.Context, input model.AddRepositoryInput) (*model.Repository, error)
 	DeleteRepository(ctx context.Context, id string) (*model.Repository, error)
@@ -133,6 +141,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "HuggingFace.maxSequenceLength":
+		if e.complexity.HuggingFace.MaxSequenceLength == nil {
+			break
+		}
+
+		return e.complexity.HuggingFace.MaxSequenceLength(childComplexity), true
+
 	case "HuggingFace.name":
 		if e.complexity.HuggingFace.Name == nil {
 			break
@@ -146,6 +161,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.HuggingFace.Organization(childComplexity), true
+
+	case "Model.deployment":
+		if e.complexity.Model.Deployment == nil {
+			break
+		}
+
+		return e.complexity.Model.Deployment(childComplexity), true
 
 	case "Model.displayName":
 		if e.complexity.Model.DisplayName == nil {
@@ -182,6 +204,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Model.Type(childComplexity), true
 
+	case "ModelDeployment.cpu":
+		if e.complexity.ModelDeployment.CPU == nil {
+			break
+		}
+
+		return e.complexity.ModelDeployment.CPU(childComplexity), true
+
+	case "ModelDeployment.enabled":
+		if e.complexity.ModelDeployment.Enabled == nil {
+			break
+		}
+
+		return e.complexity.ModelDeployment.Enabled(childComplexity), true
+
+	case "ModelDeployment.memory":
+		if e.complexity.ModelDeployment.Memory == nil {
+			break
+		}
+
+		return e.complexity.ModelDeployment.Memory(childComplexity), true
+
 	case "Mutation.addModel":
 		if e.complexity.Mutation.AddModel == nil {
 			break
@@ -193,6 +236,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.AddModel(childComplexity, args["input"].(model.AddModelInput)), true
+
+	case "Mutation.addModelDeployment":
+		if e.complexity.Mutation.AddModelDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addModelDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddModelDeployment(childComplexity, args["input"].(model.AddModelDeploymentInput)), true
 
 	case "Mutation.addRepository":
 		if e.complexity.Mutation.AddRepository == nil {
@@ -253,18 +308,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteStorage(childComplexity, args["id"].(string)), true
-
-	case "Mutation.deployModel":
-		if e.complexity.Mutation.DeployModel == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_deployModel_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.DeployModel(childComplexity, args["input"].(model.DeployModelInput)), true
 
 	case "Query.getModel":
 		if e.complexity.Query.GetModel == nil {
@@ -401,10 +444,10 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputAddModelDeploymentInput,
 		ec.unmarshalInputAddModelInput,
 		ec.unmarshalInputAddRepositoryInput,
 		ec.unmarshalInputAddStorageInput,
-		ec.unmarshalInputDeployModelInput,
 		ec.unmarshalInputHuggingFaceInput,
 	)
 	first := true
@@ -522,6 +565,21 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
+func (ec *executionContext) field_Mutation_addModelDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AddModelDeploymentInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNAddModelDeploymentInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddModelDeploymentInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_addModel_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -609,21 +667,6 @@ func (ec *executionContext) field_Mutation_deleteStorage_args(ctx context.Contex
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_deployModel_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.DeployModelInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNDeployModelInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐDeployModelInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
 	return args, nil
 }
 
@@ -808,6 +851,50 @@ func (ec *executionContext) fieldContext_HuggingFace_name(ctx context.Context, f
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HuggingFace_maxSequenceLength(ctx context.Context, field graphql.CollectedField, obj *model.HuggingFace) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_HuggingFace_maxSequenceLength(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.MaxSequenceLength, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int)
+	fc.Result = res
+	return ec.marshalNInt2int(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_HuggingFace_maxSequenceLength(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HuggingFace",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1029,8 +1116,191 @@ func (ec *executionContext) fieldContext_Model_huggingFace(ctx context.Context, 
 				return ec.fieldContext_HuggingFace_organization(ctx, field)
 			case "name":
 				return ec.fieldContext_HuggingFace_name(ctx, field)
+			case "maxSequenceLength":
+				return ec.fieldContext_HuggingFace_maxSequenceLength(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type HuggingFace", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Model_deployment(ctx context.Context, field graphql.CollectedField, obj *model.Model) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Model_deployment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Deployment, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.ModelDeployment)
+	fc.Result = res
+	return ec.marshalOModelDeployment2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐModelDeployment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Model_deployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Model",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_ModelDeployment_enabled(ctx, field)
+			case "cpu":
+				return ec.fieldContext_ModelDeployment_cpu(ctx, field)
+			case "memory":
+				return ec.fieldContext_ModelDeployment_memory(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ModelDeployment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModelDeployment_enabled(ctx context.Context, field graphql.CollectedField, obj *model.ModelDeployment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModelDeployment_enabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Enabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModelDeployment_enabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModelDeployment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModelDeployment_cpu(ctx context.Context, field graphql.CollectedField, obj *model.ModelDeployment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModelDeployment_cpu(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CPU, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModelDeployment_cpu(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModelDeployment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModelDeployment_memory(ctx context.Context, field graphql.CollectedField, obj *model.ModelDeployment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_ModelDeployment_memory(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Memory, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_ModelDeployment_memory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModelDeployment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -1085,6 +1355,8 @@ func (ec *executionContext) fieldContext_Mutation_addModel(ctx context.Context, 
 				return ec.fieldContext_Model_status(ctx, field)
 			case "huggingFace":
 				return ec.fieldContext_Model_huggingFace(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Model_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
 		},
@@ -1103,8 +1375,8 @@ func (ec *executionContext) fieldContext_Mutation_addModel(ctx context.Context, 
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_deployModel(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_deployModel(ctx, field)
+func (ec *executionContext) _Mutation_addModelDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addModelDeployment(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -1117,7 +1389,7 @@ func (ec *executionContext) _Mutation_deployModel(ctx context.Context, field gra
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeployModel(rctx, fc.Args["input"].(model.DeployModelInput))
+		return ec.resolvers.Mutation().AddModelDeployment(rctx, fc.Args["input"].(model.AddModelDeploymentInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1134,7 +1406,7 @@ func (ec *executionContext) _Mutation_deployModel(ctx context.Context, field gra
 	return ec.marshalNModel2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐModel(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_deployModel(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_addModelDeployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -1152,6 +1424,8 @@ func (ec *executionContext) fieldContext_Mutation_deployModel(ctx context.Contex
 				return ec.fieldContext_Model_status(ctx, field)
 			case "huggingFace":
 				return ec.fieldContext_Model_huggingFace(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Model_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
 		},
@@ -1163,7 +1437,7 @@ func (ec *executionContext) fieldContext_Mutation_deployModel(ctx context.Contex
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_deployModel_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_addModelDeployment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1219,6 +1493,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteModel(ctx context.Contex
 				return ec.fieldContext_Model_status(ctx, field)
 			case "huggingFace":
 				return ec.fieldContext_Model_huggingFace(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Model_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
 		},
@@ -1554,6 +1830,8 @@ func (ec *executionContext) fieldContext_Query_models(ctx context.Context, field
 				return ec.fieldContext_Model_status(ctx, field)
 			case "huggingFace":
 				return ec.fieldContext_Model_huggingFace(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Model_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
 		},
@@ -1610,6 +1888,8 @@ func (ec *executionContext) fieldContext_Query_getModel(ctx context.Context, fie
 				return ec.fieldContext_Model_status(ctx, field)
 			case "huggingFace":
 				return ec.fieldContext_Model_huggingFace(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Model_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Model", field.Name)
 		},
@@ -4216,6 +4496,47 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAddModelDeploymentInput(ctx context.Context, obj interface{}) (model.AddModelDeploymentInput, error) {
+	var it model.AddModelDeploymentInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "cpu", "memory"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "cpu":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpu"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CPU = data
+		case "memory":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memory"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Memory = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAddModelInput(ctx context.Context, obj interface{}) (model.AddModelInput, error) {
 	var it model.AddModelInput
 	asMap := map[string]interface{}{}
@@ -4332,54 +4653,6 @@ func (ec *executionContext) unmarshalInputAddStorageInput(ctx context.Context, o
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputDeployModelInput(ctx context.Context, obj interface{}) (model.DeployModelInput, error) {
-	var it model.DeployModelInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "replicas", "cpu", "memory"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "replicas":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("replicas"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Replicas = data
-		case "cpu":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpu"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CPU = data
-		case "memory":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memory"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Memory = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputHuggingFaceInput(ctx context.Context, obj interface{}) (model.HuggingFaceInput, error) {
 	var it model.HuggingFaceInput
 	asMap := map[string]interface{}{}
@@ -4387,7 +4660,7 @@ func (ec *executionContext) unmarshalInputHuggingFaceInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"organization", "name"}
+	fieldsInOrder := [...]string{"organization", "name", "maxSequenceLength"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -4408,6 +4681,13 @@ func (ec *executionContext) unmarshalInputHuggingFaceInput(ctx context.Context, 
 				return it, err
 			}
 			it.Name = data
+		case "maxSequenceLength":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("maxSequenceLength"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.MaxSequenceLength = data
 		}
 	}
 
@@ -4440,6 +4720,11 @@ func (ec *executionContext) _HuggingFace(ctx context.Context, sel ast.SelectionS
 			}
 		case "name":
 			out.Values[i] = ec._HuggingFace_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "maxSequenceLength":
+			out.Values[i] = ec._HuggingFace_maxSequenceLength(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4499,6 +4784,57 @@ func (ec *executionContext) _Model(ctx context.Context, sel ast.SelectionSet, ob
 			}
 		case "huggingFace":
 			out.Values[i] = ec._Model_huggingFace(ctx, field, obj)
+		case "deployment":
+			out.Values[i] = ec._Model_deployment(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var modelDeploymentImplementors = []string{"ModelDeployment"}
+
+func (ec *executionContext) _ModelDeployment(ctx context.Context, sel ast.SelectionSet, obj *model.ModelDeployment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, modelDeploymentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ModelDeployment")
+		case "enabled":
+			out.Values[i] = ec._ModelDeployment_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cpu":
+			out.Values[i] = ec._ModelDeployment_cpu(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memory":
+			out.Values[i] = ec._ModelDeployment_memory(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -4548,9 +4884,9 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "deployModel":
+		case "addModelDeployment":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_deployModel(ctx, field)
+				return ec._Mutation_addModelDeployment(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -5239,6 +5575,11 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 
 // region    ***************************** type.gotpl *****************************
 
+func (ec *executionContext) unmarshalNAddModelDeploymentInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddModelDeploymentInput(ctx context.Context, v interface{}) (model.AddModelDeploymentInput, error) {
+	res, err := ec.unmarshalInputAddModelDeploymentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNAddModelInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddModelInput(ctx context.Context, v interface{}) (model.AddModelInput, error) {
 	res, err := ec.unmarshalInputAddModelInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -5267,11 +5608,6 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
-}
-
-func (ec *executionContext) unmarshalNDeployModelInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐDeployModelInput(ctx context.Context, v interface{}) (model.DeployModelInput, error) {
-	res, err := ec.unmarshalInputDeployModelInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
@@ -5835,6 +6171,13 @@ func (ec *executionContext) unmarshalOHuggingFaceInput2ᚖgithubᚗcomᚋencoder
 	}
 	res, err := ec.unmarshalInputHuggingFaceInput(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOModelDeployment2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐModelDeployment(ctx context.Context, sel ast.SelectionSet, v *model.ModelDeployment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._ModelDeployment(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalORepositoryType2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐRepositoryType(ctx context.Context, v interface{}) (*model.RepositoryType, error) {

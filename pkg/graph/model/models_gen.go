@@ -8,6 +8,12 @@ import (
 	"strconv"
 )
 
+type AddModelDeploymentInput struct {
+	ID     string `json:"id"`
+	CPU    string `json:"cpu"`
+	Memory string `json:"memory"`
+}
+
 type AddModelInput struct {
 	Type        ModelType         `json:"type"`
 	HuggingFace *HuggingFaceInput `json:"huggingFace,omitempty"`
@@ -25,29 +31,31 @@ type AddStorageInput struct {
 	Name string      `json:"name"`
 }
 
-type DeployModelInput struct {
-	ID       string `json:"id"`
-	Replicas int    `json:"replicas"`
-	CPU      string `json:"cpu"`
-	Memory   string `json:"memory"`
-}
-
 type HuggingFace struct {
-	Organization string `json:"organization"`
-	Name         string `json:"name"`
+	Organization      string `json:"organization"`
+	Name              string `json:"name"`
+	MaxSequenceLength int    `json:"maxSequenceLength"`
 }
 
 type HuggingFaceInput struct {
-	Organization string `json:"organization"`
-	Name         string `json:"name"`
+	Organization      string `json:"organization"`
+	Name              string `json:"name"`
+	MaxSequenceLength int    `json:"maxSequenceLength"`
 }
 
 type Model struct {
-	ID          string       `json:"id"`
-	Type        ModelType    `json:"type"`
-	DisplayName string       `json:"displayName"`
-	Status      ModelStatus  `json:"status"`
-	HuggingFace *HuggingFace `json:"huggingFace,omitempty"`
+	ID          string           `json:"id"`
+	Type        ModelType        `json:"type"`
+	DisplayName string           `json:"displayName"`
+	Status      ModelStatus      `json:"status"`
+	HuggingFace *HuggingFace     `json:"huggingFace,omitempty"`
+	Deployment  *ModelDeployment `json:"deployment,omitempty"`
+}
+
+type ModelDeployment struct {
+	Enabled bool   `json:"enabled"`
+	CPU     string `json:"cpu"`
+	Memory  string `json:"memory"`
 }
 
 type Mutation struct {

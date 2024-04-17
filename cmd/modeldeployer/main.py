@@ -8,18 +8,19 @@ import argparse
 device = "cuda"  # for GPU usage or "cpu" for CPU usage
 
 class CustomModel(Model):
-    def __init__(self, org_name: str, repo_name: str, max_sequence_length: int):
-        self.model = f"{org_name}/{repo_name}"
-        super().__init__(self.model)
+    def __init__(self, name: str, org_name: str, repo_name: str, max_sequence_length: int):
+        super().__init__(name)
+        self.name = name
         self.org_name = org_name
         self.repo_name = repo_name
         self.max_sequence_length = max_sequence_length
         self.device = torch.device(device if torch.cuda.is_available() else "cpu")
         print("Using device:", self.device)
+        self.ready = False
 
     def load(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model)
-        self.model = SentenceTransformer(self.model)
+        self.tokenizer = AutoTokenizer.from_pretrained(f"{self.org_name}/{self.repo_name}")
+        self.model = SentenceTransformer(f"{self.org_name}/{self.repo_name}")
         self.model.max_seq_length = self.max_sequence_length
         self.ready = True
 
@@ -141,6 +142,6 @@ if __name__ == "__main__":
     args = parser.parse_args()  # Parse the arguments from the command line
 
     # Create an instance of the model using the parsed arguments
-    model = CustomModel(org_name=args.org_name, repo_name=args.repo_name, max_sequence_length=args.max_sequence_length)
+    model = CustomModel(name="custom-model", org_name=args.org_name, repo_name=args.repo_name, max_sequence_length=args.max_sequence_length)
     model.load()
     ModelServer().start([model])

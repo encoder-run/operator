@@ -8,6 +8,8 @@ GATEWAY_IMG ?= gateway
 GATEWAY_IMG_VERSION ?= 0.0.1
 CONSOLE_UI_IMG ?= console-ui
 CONSOLE_UI_IMG_VERSION ?= 0.0.1
+MODELDEPLOYER_IMG ?= codeembedder
+MODELDEPLOYER_IMG_VERSION ?= 0.0.1
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.28.0
 ISTIO_VERSION=1.17.2
@@ -105,6 +107,11 @@ gateway-push: ## Push the gateway Docker image.
 .PHONY: console-ui-build
 console-ui-build: ## Build the console-ui Docker image.
 	$(CONTAINER_TOOL) build -t ${CONSOLE_UI_IMG}:${CONSOLE_UI_IMG_VERSION} -f frontend/console-ui/Dockerfile frontend/console-ui
+
+.PHONY: modeldeployer-docker-build
+modeldeployer-docker-build: ## Build the codeembedder Docker image.
+	docker build -t ${MODELDEPLOYER_IMG}:${MODELDEPLOYER_IMG_VERSION} -f cmd/modeldeployer/Dockerfile .
+
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
 # - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
@@ -137,20 +144,18 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: kind-install manifests istio kustomize docker-build gateway-build console-ui-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: kind-install manifests istio kustomize docker-build gateway-build console-ui-build modeldeployer-docker-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	make kind-delete
 	make kind
 	$(ISTIO)/bin/istioctl x precheck
 	$(ISTIO)/bin/istioctl install --set profile=default -y
 	make install
 	$(CMCTL) x install --set prometheus.enabled=false
-	@echo "Waiting for cert-manager to be ready..."
-	$(KUBECTL) wait --for=condition=ready pod -l app=cert-manager --timeout=180s -n cert-manager
-	$(KUBECTL) wait --for=condition=ready pod -l app=webhook --timeout=180s -n cert-manager
 	$(KUSTOMIZE) build config/kserve | $(KUBECTL) apply -f -
 	kind load docker-image $(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(GATEWAY_IMG):$(GATEWAY_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(CONSOLE_UI_IMG):$(CONSOLE_UI_IMG_VERSION) --name=$(CLUSTER_NAME)
+	kind load docker-image $(MODELDEPLOYER_IMG):$(MODELDEPLOYER_IMG_VERSION) --name=$(CLUSTER_NAME)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION)
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 	make default-admin

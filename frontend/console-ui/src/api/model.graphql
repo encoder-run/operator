@@ -7,6 +7,12 @@ query models {
         huggingFace {
             organization
             name
+            maxSequenceLength
+        }
+        deployment {
+            enabled
+            cpu
+            memory
         }
     }
 }
@@ -20,6 +26,12 @@ query getModel($id: ID!) {
         huggingFace {
             organization
             name
+            maxSequenceLength
+        }
+        deployment {
+            enabled
+            cpu
+            memory
         }
     }
 }
@@ -33,6 +45,31 @@ mutation addModel($input: AddModelInput!) {
         huggingFace {
             organization
             name
+            maxSequenceLength
+        }
+        deployment {
+            enabled
+            cpu
+            memory
+        }
+    }
+}
+
+mutation addModelDeployment($input: AddModelDeploymentInput!) {
+    addModelDeployment(input: $input) {
+        id
+        type
+        status
+        displayName
+        huggingFace {
+            organization
+            name
+            maxSequenceLength
+        }
+        deployment {
+            enabled
+            cpu
+            memory
         }
     }
 }
@@ -46,6 +83,12 @@ mutation deleteModel($id: ID!) {
         huggingFace {
             organization
             name
+            maxSequenceLength
+        }
+        deployment {
+            enabled
+            cpu
+            memory
         }
     }
 }

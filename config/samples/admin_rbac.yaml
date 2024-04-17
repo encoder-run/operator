@@ -11,7 +11,7 @@ metadata:
   namespace: default
 rules:
 - apiGroups: ["cloud.encoder.run"]
-  resources: ["models", "modeldeployments", "repositories", "storages"]
+  resources: ["models", "repositories", "storages"]
   verbs: ["*"]  # This gives full access. Adjust if necessary.
 ---
 apiVersion: rbac.authorization.k8s.io/v1

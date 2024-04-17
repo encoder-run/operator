@@ -1,37 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
-import { ModelType, useAddModelMutation } from '../../api/types';
+import { AddModelInput, ModelType, useAddModelMutation } from '../../api/types';
+import { parse } from 'path';
 
 interface AddModelDialogProps {
     open: boolean;
     onClose: () => void;
+    onSuccess(id: String): void;
     refetch: () => void;
 }
 
-const AddModelDialog = ({ open, onClose, refetch }: AddModelDialogProps) => {
+const AddModelDialog = ({ open, onClose, onSuccess, refetch }: AddModelDialogProps) => {
     const [modelType, setModelType] = useState<ModelType | ''>('');
     const [organization, setOrganization] = useState('');
     const [repoName, setRepoName] = useState('');
+    const [maxSequenceLength, setMaxSequenceLength] = useState('');
     const [selectedModel, setSelectedModel] = useState('');
     const [addModel, { data, loading, error }] = useAddModelMutation();
 
     const handleSubmit = () => {
-        const input: any = {
+        if (modelType === '') {
+            return;
+        }
+        const input: AddModelInput = {
             type: modelType,
         };
 
         if (modelType === ModelType.Huggingface) {
-            input.huggingFace = { organization: organization, name: repoName };
+            input.huggingFace = { 
+                organization: organization, 
+                name: repoName,
+                maxSequenceLength: parseInt(maxSequenceLength),
+            };
         }
 
         addModel({
             variables: {
                 input: input,
             },
-        }).then(() => {
+        }).then((resp) => {
             refetch();
-        }).finally(() => {
             onClose();
+            if (resp.data?.addModel?.id) {
+                onSuccess(resp.data.addModel.id);
+            }
         });
     };
 
@@ -40,6 +52,7 @@ const AddModelDialog = ({ open, onClose, refetch }: AddModelDialogProps) => {
             setModelType('');
             setOrganization('');
             setRepoName('');
+            setMaxSequenceLength('');
             setSelectedModel('');
         }
     }, [open]);
@@ -66,6 +79,15 @@ const AddModelDialog = ({ open, onClose, refetch }: AddModelDialogProps) => {
                             variant="outlined"
                             value={repoName}
                             onChange={(e) => setRepoName(e.target.value)}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Max Sequence Length"
+                            type="number"
+                            fullWidth
+                            variant="outlined"
+                            value={maxSequenceLength}
+                            onChange={(e) => setMaxSequenceLength(e.target.value)}
                         />
                     </>
                 );

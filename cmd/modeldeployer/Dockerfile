@@ -9,8 +9,8 @@ RUN apt-get update && \
     apt-get install -y python3 python3-pip
 
 # Copy the Python files into the container
-COPY cmd/codeembedder/requirements.txt /requirements.txt
-COPY cmd/codeembedder/main.py .
+COPY cmd/modeldeployer/requirements.txt /requirements.txt
+COPY cmd/modeldeployer/main.py .
 
 RUN pip install -r /requirements.txt
 

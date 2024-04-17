@@ -34,7 +34,10 @@ import (
 
 	cloudv1alpha1 "github.com/encoder-run/operator/api/cloud/v1alpha1"
 	cloudcontroller "github.com/encoder-run/operator/internal/controller/cloud"
+
 	//+kubebuilder:scaffold:imports
+
+	"github.com/kserve/kserve/pkg/apis/serving/v1beta1"
 )
 
 type Config struct {
@@ -51,6 +54,8 @@ func init() {
 
 	utilruntime.Must(cloudv1alpha1.AddToScheme(scheme))
 	//+kubebuilder:scaffold:scheme
+
+	utilruntime.Must(v1beta1.AddToScheme(scheme))
 }
 
 func main() {
@@ -99,13 +104,6 @@ func main() {
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Model")
-		os.Exit(1)
-	}
-	if err = (&cloudcontroller.ModelDeploymentReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "ModelDeployment")
 		os.Exit(1)
 	}
 	if err = (&cloudcontroller.RepositoryReconciler{

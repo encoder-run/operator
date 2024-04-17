@@ -1,4 +1,4 @@
-import { Model, ModelStatus, ModelType } from "../../api/types.js";
+import { AddModelDeploymentInput, Model, ModelStatus, ModelType } from "../../api/types.js";
 
 let models: Model[] = [
     {
@@ -12,13 +12,34 @@ let models: Model[] = [
         displayName: 'distilbert/distilbert-base-uncased',
         type: ModelType.Huggingface,
         status: ModelStatus.Ready,
+        deployment: {
+            enabled: true,
+            cpu: '1',
+            memory: '1G',
+        },
     },
     {
         id: '3',
         displayName: 'openai/gpt-3',
         type: ModelType.External,
         status: ModelStatus.Deploying,
+        deployment: {
+            enabled: true,
+            cpu: '1',
+            memory: '1G',
+        },
     },
+    {
+        id: '4',
+        displayName: 'jinaai/jina-embeddings-v3-base-code',
+        type: ModelType.Huggingface,
+        status: ModelStatus.Deploying,
+        deployment: {
+            enabled: true,
+            cpu: '1',
+            memory: '1G',
+        },
+    }
 ];
 
 class ModelApi {
@@ -43,6 +64,28 @@ class ModelApi {
         };
         models.push(newModel);
         return newModel;
+    }
+
+    addModelDeployment(input: AddModelDeploymentInput) {
+        // Find the model
+        const model = models.find(model => model.id === input.id);
+        if (!model) {
+            throw new Error('Model not found');
+        }
+        // Update the model deployment spec
+        model.deployment = {
+            enabled: true,
+            cpu: input.cpu,
+            memory: input.memory,
+        };
+
+        // We need to asynchronously update the model status so that it updates
+        // after this call completes after 5 seconds.
+        setTimeout(() => {
+            model.status = ModelStatus.Ready;
+        }, 5000);
+
+        return model;
     }
 
     deleteModel(id: string) {

@@ -7,32 +7,6 @@ rules:
 - apiGroups:
   - cloud.encoder.run
   resources:
-  - modeldeployments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - cloud.encoder.run
-  resources:
-  - modeldeployments/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - cloud.encoder.run
-  resources:
-  - modeldeployments/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - cloud.encoder.run
-  resources:
   - models
   verbs:
   - create
@@ -108,3 +82,15 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - serving.kserve.io
+  resources:
+  - inferenceservices
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch

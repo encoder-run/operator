@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -30,21 +31,46 @@ const (
 	ModelTypeExternal ModelType = "EXTERNAL"
 )
 
+// ModelState defines the state of the model
+type ModelState string
+
+const (
+	// ModelStateNotDeployed represents a model that is not deployed
+	ModelStateNotDeployed ModelState = "NOT_DEPLOYED"
+	// ModelStateDeploying represents a model that is being deployed
+	ModelStateDeploying ModelState = "DEPLOYING"
+	// ModelStateReady represents a model that is ready
+	ModelStateReady ModelState = "READY"
+	// ModelStateError represents a model that has failed
+	ModelStateError ModelState = "ERROR"
+)
+
+type ModelDeploymentSpec struct {
+	Enabled bool              `json:"enabled"`
+	CPU     resource.Quantity `json:"cpu"`
+	Memory  resource.Quantity `json:"memory"`
+}
+
 // ModelSpec defines the desired state of Model
 type ModelSpec struct {
 	Type ModelType `json:"type"`
 	// Hugging Face model spec
 	HuggingFace *HuggingFaceModelSpec `json:"huggingface,omitempty"`
+	// Deployment spec
+	Deployment *ModelDeploymentSpec `json:"deployment,omitempty"`
 }
 
 // HuggingFaceModelSpec defines the desired state of HuggingFaceModel
 type HuggingFaceModelSpec struct {
-	Organization string `json:"organization"`
-	Name         string `json:"name"`
+	Organization      string `json:"organization"`
+	Name              string `json:"name"`
+	MaxSequenceLength int    `json:"maxSequenceLength"`
 }
 
 // ModelStatus defines the observed state of Model
 type ModelStatus struct {
+	State      *ModelState        `json:"state,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true

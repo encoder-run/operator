@@ -24,6 +24,10 @@ export const router = createBrowserRouter([
                 element: <></>,
             },
             {
+                path: "pipelines",
+                element: <></>,
+            },
+            {
                 path: "models",
                 element: <ModelsPage />,
             },

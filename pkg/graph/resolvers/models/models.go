@@ -8,6 +8,7 @@ import (
 	"github.com/encoder-run/operator/pkg/common"
 	"github.com/encoder-run/operator/pkg/graph/converters"
 	"github.com/encoder-run/operator/pkg/graph/model"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -86,8 +87,48 @@ func Add(ctx context.Context, input model.AddModelInput) (*model.Model, error) {
 	return m, nil
 }
 
-func Deploy(ctx context.Context, input model.DeployModelInput) (*model.Model, error) {
-	return nil, nil
+func AddDeployment(ctx context.Context, input model.AddModelDeploymentInput) (*model.Model, error) {
+	// Get the controller-runtime client from the context.
+	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
+	if !ok {
+		return nil, fmt.Errorf("controller-runtime client not found in context")
+	}
+
+	cpu, err := resource.ParseQuantity(input.CPU)
+	if err != nil {
+		return nil, err
+	}
+
+	memory, err := resource.ParseQuantity(input.Memory)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the model.
+	modelCRD := &v1alpha1.Model{}
+	if err := ctrlClient.Get(ctx, client.ObjectKey{Namespace: "default", Name: input.ID}, modelCRD); err != nil {
+		return nil, err
+	}
+
+	// Update the model with the deployment.
+	modelCRD.Spec.Deployment = &v1alpha1.ModelDeploymentSpec{
+		Enabled: true,
+		CPU:     cpu,
+		Memory:  memory,
+	}
+
+	// Update the model.
+	if err := ctrlClient.Update(ctx, modelCRD); err != nil {
+		return nil, err
+	}
+
+	// Convert the model to the model.
+	m, err := converters.ModelCRDToModel(modelCRD)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
 }
 
 func Delete(ctx context.Context, id string) (*model.Model, error) {

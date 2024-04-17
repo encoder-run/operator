@@ -8,6 +8,7 @@ import {
 import { router } from './routes/router';
 import { ApolloProvider } from '@apollo/client';
 import { client } from './context/graphql';
+import { Toastr } from './components/toast';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -16,6 +17,7 @@ root.render(
   <React.StrictMode>
     <ApolloProvider client={client}>
       <RouterProvider router={router} />
+      <Toastr/>
     </ApolloProvider>
   </React.StrictMode>
 );

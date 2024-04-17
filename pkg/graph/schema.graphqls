@@ -51,6 +51,13 @@ input AddRepositoryInput {
 type HuggingFace {
   organization: String!
   name: String!
+  maxSequenceLength: Int!
+}
+
+type ModelDeployment {
+  enabled: Boolean!
+  cpu: String!
+  memory: String!
 }
 
 type Model {
@@ -59,6 +66,7 @@ type Model {
   displayName: String!
   status: ModelStatus!
   huggingFace: HuggingFace
+  deployment: ModelDeployment
 }
 
 type Storage {
@@ -80,6 +88,7 @@ type Query {
 input HuggingFaceInput {
   organization: String!
   name: String!
+  maxSequenceLength: Int!
 }
 
 input AddModelInput {
@@ -87,9 +96,8 @@ input AddModelInput {
   huggingFace: HuggingFaceInput
 }
 
-input DeployModelInput {
+input AddModelDeploymentInput {
   id: ID!
-  replicas: Int!
   cpu: String!
   memory: String!
 }
@@ -101,7 +109,7 @@ input AddStorageInput {
 
 type Mutation {
   addModel(input: AddModelInput!): Model!
-  deployModel(input: DeployModelInput!): Model!
+  addModelDeployment(input: AddModelDeploymentInput!): Model!
   deleteModel(id: ID!): Model!
   addRepository(input: AddRepositoryInput!): Repository!
   deleteRepository(id: ID!): Repository!

@@ -48,6 +48,9 @@ const resolvers = {
         addModel: (parent, args, context, info) => {
             return modelApi.addModel(args.input);
         },
+        addModelDeployment: (parent, args, context, info) => {
+            return modelApi.addModelDeployment(args.input);
+        },
         deleteModel: (parent, args, context, info) => {
             return modelApi.deleteModel(args.id);
         },

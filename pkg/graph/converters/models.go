@@ -24,15 +24,41 @@ func ModelCRDToModel(modelCRD *v1alpha1.Model) (*model.Model, error) {
 
 	m.Type = modelType
 	if modelCRD.Spec.Type == v1alpha1.ModelTypeHuggingFace {
-		if m.HuggingFace == nil {
-			m.HuggingFace = &model.HuggingFace{}
+		m.HuggingFace = &model.HuggingFace{
+			Name:              modelCRD.Spec.HuggingFace.Name,
+			Organization:      modelCRD.Spec.HuggingFace.Organization,
+			MaxSequenceLength: modelCRD.Spec.HuggingFace.MaxSequenceLength,
 		}
-		m.HuggingFace.Name = modelCRD.Spec.HuggingFace.Name
-		m.HuggingFace.Organization = modelCRD.Spec.HuggingFace.Organization
 		m.DisplayName = fmt.Sprintf("%s/%s", modelCRD.Spec.HuggingFace.Organization, modelCRD.Spec.HuggingFace.Name)
 	}
 
-	m.Status = model.ModelStatusNotDeployed
+	if modelCRD.Spec.Deployment != nil {
+		m.Deployment = &model.ModelDeployment{
+			Enabled: modelCRD.Spec.Deployment.Enabled,
+			CPU:     modelCRD.Spec.Deployment.CPU.String(),
+			Memory:  modelCRD.Spec.Deployment.Memory.String(),
+		}
+	}
+
+	var status model.ModelStatus
+	if modelCRD.Status.State != nil {
+		switch *modelCRD.Status.State {
+		case v1alpha1.ModelStateNotDeployed:
+			status = model.ModelStatusNotDeployed
+		case v1alpha1.ModelStateDeploying:
+			status = model.ModelStatusDeploying
+		case v1alpha1.ModelStateReady:
+			status = model.ModelStatusReady
+		case v1alpha1.ModelStateError:
+			status = model.ModelStatusError
+		default:
+			return nil, fmt.Errorf("unknown model state: %s", *modelCRD.Status.State)
+		}
+	} else {
+		// If the state is not set, then the model is not deployed.
+		status = model.ModelStatusNotDeployed
+	}
+	m.Status = status
 
 	return m, nil
 }
@@ -49,8 +75,9 @@ func ModelInputToCRD(input model.AddModelInput) (*v1alpha1.Model, error) {
 	case model.ModelTypeHuggingface:
 		modelCRD.Spec.Type = v1alpha1.ModelTypeHuggingFace
 		modelCRD.Spec.HuggingFace = &v1alpha1.HuggingFaceModelSpec{
-			Name:         input.HuggingFace.Name,
-			Organization: input.HuggingFace.Organization,
+			Name:              input.HuggingFace.Name,
+			Organization:      input.HuggingFace.Organization,
+			MaxSequenceLength: input.HuggingFace.MaxSequenceLength,
 		}
 	case model.ModelTypeExternal:
 		modelCRD.Spec.Type = v1alpha1.ModelTypeExternal

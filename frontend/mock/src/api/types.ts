@@ -14,6 +14,12 @@ export type Scalars = {
   Float: { input: number; output: number; }
 };
 
+export type AddModelDeploymentInput = {
+  cpu: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  memory: Scalars['String']['input'];
+};
+
 export type AddModelInput = {
   huggingFace?: InputMaybe<HuggingFaceInput>;
   type: ModelType;
@@ -31,31 +37,34 @@ export type AddStorageInput = {
   type: StorageType;
 };
 
-export type DeployModelInput = {
-  cpu: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
-  memory: Scalars['String']['input'];
-  replicas: Scalars['Int']['input'];
-};
-
 export type HuggingFace = {
   __typename?: 'HuggingFace';
+  maxSequenceLength: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   organization: Scalars['String']['output'];
 };
 
 export type HuggingFaceInput = {
+  maxSequenceLength: Scalars['Int']['input'];
   name: Scalars['String']['input'];
   organization: Scalars['String']['input'];
 };
 
 export type Model = {
   __typename?: 'Model';
+  deployment?: Maybe<ModelDeployment>;
   displayName: Scalars['String']['output'];
   huggingFace?: Maybe<HuggingFace>;
   id: Scalars['ID']['output'];
   status: ModelStatus;
   type: ModelType;
+};
+
+export type ModelDeployment = {
+  __typename?: 'ModelDeployment';
+  cpu: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  memory: Scalars['String']['output'];
 };
 
 export enum ModelStatus {
@@ -74,17 +83,22 @@ export enum ModelType {
 export type Mutation = {
   __typename?: 'Mutation';
   addModel: Model;
+  addModelDeployment: Model;
   addRepository: Repository;
   addStorage: Storage;
   deleteModel: Model;
   deleteRepository: Repository;
   deleteStorage: Storage;
-  deployModel: Model;
 };
 
 
 export type MutationAddModelArgs = {
   input: AddModelInput;
+};
+
+
+export type MutationAddModelDeploymentArgs = {
+  input: AddModelDeploymentInput;
 };
 
 
@@ -110,11 +124,6 @@ export type MutationDeleteRepositoryArgs = {
 
 export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
-};
-
-
-export type MutationDeployModelArgs = {
-  input: DeployModelInput;
 };
 
 export type Query = {

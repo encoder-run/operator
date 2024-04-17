@@ -67,6 +67,10 @@ export default function ModelsPage() {
         setRows(filteredRows);
     };
 
+    const onSuccessRedirect = (id: string) => {
+        navigate(`/models/${id}`);
+    }
+
     useEffect(() => {
         setRows(data?.models || []);
     }, [data]);
@@ -128,6 +132,7 @@ export default function ModelsPage() {
                 <AddModelDialog
                     open={openAddDialog}
                     onClose={() => setOpenAddDialog(false)}
+                    onSuccess={onSuccessRedirect}
                     refetch={refetch}
                 />
             </Box>

@@ -24,15 +24,6 @@ resources:
   controller: true
   domain: encoder.run
   group: cloud
-  kind: ModelDeployment
-  path: github.com/encoder-run/operator/api/cloud/v1alpha1
-  version: v1alpha1
-- api:
-    crdVersion: v1
-    namespaced: true
-  controller: true
-  domain: encoder.run
-  group: cloud
   kind: Repository
   path: github.com/encoder-run/operator/api/cloud/v1alpha1
   version: v1alpha1
