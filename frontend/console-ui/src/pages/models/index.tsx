@@ -5,7 +5,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 import ConfirmDelete from '../../components/confirm-delete-dialog';
 import AddModelDialog from './add-model-dialog';
-import { Model, useModelsQuery } from '../../api/types';
+import { Model, useDeleteModelMutation, useModelsQuery } from '../../api/types';
 
 export default function ModelsPage() {
     const columns: GridColDef[] = [
@@ -34,7 +34,8 @@ export default function ModelsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const { data, loading, error, refetch } = useModelsQuery();
     const [rows, setRows] = useState(data?.models || []);
-    const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
+    const [deleteModel, { data: deleteData, loading: deleteLoading, error: deleteError }] = useDeleteModelMutation();
+    const [selectedModels, setSelectedModels] = useState<GridRowSelectionModel>([]);
     const navigate = useNavigate();
     const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
     const [openAddDialog, setOpenAddDialog] = useState(false);
@@ -47,14 +48,17 @@ export default function ModelsPage() {
 
     const confirmDelete = () => {
         // Actual deletion logic here, after confirmation
-        console.log('Delete confirmed for selected rows:', selectionModel);
+        console.log('Delete confirmed for selected rows:', selectedModels);
         // Remove selected rows from the rows state
-        const newRows = rows.filter(row => !selectionModel.includes(row.id));
-        setRows(newRows);
+        selectedModels.forEach(async (id) => {
+            await deleteModel({ variables: { id: String(id) } });
+        });
+
+        refetch();
         // Close the dialog
         setOpenConfirmDelete(false);
         // Clear selection model
-        setSelectionModel([]);
+        setSelectedModels([]);
     };
 
     const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -87,7 +91,7 @@ export default function ModelsPage() {
                         <Button
                             variant="outlined"
                             onClick={handleDelete}
-                            disabled={selectionModel.length === 0}
+                            disabled={selectedModels.length === 0}
                             color="error"
                         >
                             Delete Model
@@ -117,8 +121,8 @@ export default function ModelsPage() {
                         checkboxSelection
                         disableRowSelectionOnClick
                         disableColumnSelector
-                        rowSelectionModel={selectionModel}
-                        onRowSelectionModelChange={setSelectionModel}
+                        rowSelectionModel={selectedModels}
+                        onRowSelectionModelChange={setSelectedModels}
                     />
                 </Box>
                 <ConfirmDelete
