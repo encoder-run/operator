@@ -1,9 +1,8 @@
-kserve==0.11.0-rc1
-torch==2.0.0
-torchvision==0.15.1
+kserve==0.12.0
+torch
+torchvision
 transformers
 accelerate
 sentence-transformers
-optimum
-optimum[onnxruntime]
 argparse
+ray[serve]<=2.9.3,>=2.9.2

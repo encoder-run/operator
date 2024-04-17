@@ -7,11 +7,10 @@ import argparse
 
 device = "cuda"  # for GPU usage or "cpu" for CPU usage
 
-
 class CustomModel(Model):
     def __init__(self, org_name: str, repo_name: str, max_sequence_length: int):
-        model_name = f"{org_name}/{repo_name}"
-        super().__init__(model_name)
+        self.model = f"{org_name}/{repo_name}"
+        super().__init__(self.model)
         self.org_name = org_name
         self.repo_name = repo_name
         self.max_sequence_length = max_sequence_length
@@ -19,8 +18,8 @@ class CustomModel(Model):
         print("Using device:", self.device)
 
     def load(self):
-        self.tokenizer = AutoTokenizer.from_pretrained("flax-sentence-embeddings/st-codesearch-distilroberta-base")
-        self.model = SentenceTransformer("flax-sentence-embeddings/st-codesearch-distilroberta-base")
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model)
+        self.model = SentenceTransformer(self.model)
         self.model.max_seq_length = self.max_sequence_length
         self.ready = True
 
