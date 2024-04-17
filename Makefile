@@ -137,7 +137,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: manifests istio kustomize docker-build gateway-build console-ui-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: kind-install manifests istio kustomize docker-build gateway-build console-ui-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 	make kind-delete
 	make kind
 	$(ISTIO)/bin/istioctl x precheck
@@ -239,7 +239,7 @@ kind-install: # Install the controller in the kind cluster
 			[ $$(uname -m) = arm64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-darwin-arm64; \
 		fi; \
 		chmod +x ./kind; \
-		sudo mv $(LOCALBIN)/kind; \
+		sudo mv ./kind $(LOCALBIN)/kind; \
 	fi
 
 .PHONY: kind-delete
