@@ -6,9 +6,10 @@ interface AddStorageDialogProps {
     open: boolean;
     onClose: () => void;
     refetch: () => void;
+    onSuccess(id: String): void;
 }
 
-const AddStorageDialog = ({ open, onClose, refetch }: AddStorageDialogProps) => {
+const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialogProps) => {
     const [type, setType] = useState<StorageType | null>();
     const [name, setName] = useState('');
     const [addStorage, { data, loading, error }] = useAddStorageMutation();
@@ -25,10 +26,12 @@ const AddStorageDialog = ({ open, onClose, refetch }: AddStorageDialogProps) => 
             variables: {
                 input: input,
             },
-        }).then(() => {
+        }).then((resp) => {
             refetch(); // Refetch the data
-        }).finally(() => {
             onClose(); // Close the dialog
+            if (resp.data?.addStorage?.id) {
+                onSuccess(resp.data.addStorage.id);
+            }
         });
     };
 

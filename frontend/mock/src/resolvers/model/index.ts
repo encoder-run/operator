@@ -66,7 +66,7 @@ class ModelApi {
         return newModel;
     }
 
-    addModelDeployment(input: AddModelDeploymentInput) {
+    addDeployment(input: AddModelDeploymentInput) {
         // Find the model
         const model = models.find(model => model.id === input.id);
         if (!model) {

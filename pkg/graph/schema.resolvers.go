@@ -43,6 +43,11 @@ func (r *mutationResolver) AddStorage(ctx context.Context, input model.AddStorag
 	return storage.Add(ctx, input)
 }
 
+// AddStorageDeployment is the resolver for the addStorageDeployment field.
+func (r *mutationResolver) AddStorageDeployment(ctx context.Context, input model.AddStorageDeploymentInput) (*model.Storage, error) {
+	return storage.AddDeployment(ctx, input)
+}
+
 // DeleteStorage is the resolver for the deleteStorage field.
 func (r *mutationResolver) DeleteStorage(ctx context.Context, id string) (*model.Storage, error) {
 	return storage.Delete(ctx, id)

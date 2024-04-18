@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -32,18 +33,41 @@ const (
 	StorageTypeElasticsearch StorageType = "ELASTICSEARCH"
 )
 
+// StorageState defines the state of the storage
+type StorageState string
+
+const (
+	// StorageStateNotDeployed represents a storage that is not deployed
+	StorageStateNotDeployed StorageState = "NOT_DEPLOYED"
+	// StorageStateDeploying represents a storage that is being deployed
+	StorageStateDeploying StorageState = "DEPLOYING"
+	// StorageStateReady represents a storage that is ready
+	StorageStateReady StorageState = "READY"
+	// StorageStateError represents a storage that has failed
+	StorageStateError StorageState = "ERROR"
+)
+
+type StorageDeploymentSpec struct {
+	Enabled bool              `json:"enabled"`
+	CPU     resource.Quantity `json:"cpu"`
+	Memory  resource.Quantity `json:"memory"`
+}
+
 // StorageSpec defines the desired state of Storage
 type StorageSpec struct {
 	// Type of storage
 	Type StorageType `json:"type"`
 	// Name of the storage
 	Name string `json:"name"`
+
+	// Deployment spec
+	Deployment *StorageDeploymentSpec `json:"deployment,omitempty"`
 }
 
 // StorageStatus defines the observed state of Storage
 type StorageStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	State      *StorageState      `json:"state,omitempty"`
+	Conditions []metav1.Condition `json:"conditions,omitempty"`
 }
 
 //+kubebuilder:object:root=true

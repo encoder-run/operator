@@ -49,13 +49,16 @@ const resolvers = {
             return modelApi.addModel(args.input);
         },
         addModelDeployment: (parent, args, context, info) => {
-            return modelApi.addModelDeployment(args.input);
+            return modelApi.addDeployment(args.input);
         },
         deleteModel: (parent, args, context, info) => {
             return modelApi.deleteModel(args.id);
         },
         addStorage: (parent, args, context, info) => {
             return storageApi.addStorage(args.input);
+        },
+        addStorageDeployment: (parent, args, context, info) => {
+            return storageApi.addDeployment(args.input);
         },
         deleteStorage: (parent, args, context, info) => {
             return storageApi.deleteStorage(args.id);

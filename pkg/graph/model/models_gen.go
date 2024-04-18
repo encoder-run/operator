@@ -26,6 +26,12 @@ type AddRepositoryInput struct {
 	Name  *string         `json:"name,omitempty"`
 }
 
+type AddStorageDeploymentInput struct {
+	ID     string `json:"id"`
+	CPU    string `json:"cpu"`
+	Memory string `json:"memory"`
+}
+
 type AddStorageInput struct {
 	Type StorageType `json:"type"`
 	Name string      `json:"name"`
@@ -74,10 +80,17 @@ type Repository struct {
 }
 
 type Storage struct {
-	ID     string        `json:"id"`
-	Name   string        `json:"name"`
-	Type   StorageType   `json:"type"`
-	Status StorageStatus `json:"status"`
+	ID         string             `json:"id"`
+	Name       string             `json:"name"`
+	Type       StorageType        `json:"type"`
+	Status     StorageStatus      `json:"status"`
+	Deployment *StorageDeployment `json:"deployment,omitempty"`
+}
+
+type StorageDeployment struct {
+	Enabled bool   `json:"enabled"`
+	CPU     string `json:"cpu"`
+	Memory  string `json:"memory"`
 }
 
 type ModelStatus string

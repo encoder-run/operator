@@ -74,6 +74,13 @@ type Storage {
   name: String!
   type: StorageType!
   status: StorageStatus!
+  deployment: StorageDeployment
+}
+
+type StorageDeployment {
+  enabled: Boolean!
+  cpu: String!
+  memory: String!
 }
 
 type Query {
@@ -107,6 +114,12 @@ input AddStorageInput {
   name: String!
 }
 
+input AddStorageDeploymentInput {
+  id: ID!
+  cpu: String!
+  memory: String!
+}
+
 type Mutation {
   addModel(input: AddModelInput!): Model!
   addModelDeployment(input: AddModelDeploymentInput!): Model!
@@ -114,5 +127,6 @@ type Mutation {
   addRepository(input: AddRepositoryInput!): Repository!
   deleteRepository(id: ID!): Repository!
   addStorage(input: AddStorageInput!): Storage!
+  addStorageDeployment(input: AddStorageDeploymentInput!): Storage!
   deleteStorage(id: ID!): Storage!
 }

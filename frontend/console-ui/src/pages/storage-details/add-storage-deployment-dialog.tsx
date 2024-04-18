@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Select, MenuItem, InputLabel, FormControl, Grid } from '@mui/material';
-import { useAddModelDeploymentMutation } from '../../api/types';
+import { useAddStorageDeploymentMutation } from '../../api/types';
 
-interface AddModelDeploymentDialogProps {
+interface AddStorageDeploymentDialogProps {
     open: boolean;
     onClose: () => void;
     onSuccess(): void;
     refetch: () => void;
-    modelId: string;
+    storageId: string;
 }
 
-const AddModelDeploymentDialog = ({ open, onClose, onSuccess, refetch, modelId }: AddModelDeploymentDialogProps) => {
+const AddStorageDeploymentDialog = ({ open, onClose, onSuccess, refetch, storageId }: AddStorageDeploymentDialogProps) => {
     const [cpu, setCpu] = useState('');
     const [memory, setMemory] = useState('');
-    const [addDeployment, { loading, error }] = useAddModelDeploymentMutation();
+    const [addDeployment, { loading, error }] = useAddStorageDeploymentMutation();
 
     const handleSubmit = async () => {
         try {
             await addDeployment({
                 variables: {
                     input: {
-                        id: modelId,
+                        id: storageId,
                         cpu,
                         memory
                     }
@@ -39,7 +39,7 @@ const AddModelDeploymentDialog = ({ open, onClose, onSuccess, refetch, modelId }
 
     return (
         <Dialog open={open} onClose={onClose} sx={{ width: '100hv' }}>
-            <DialogTitle>Add Model Deployment</DialogTitle>
+            <DialogTitle>Add Storage Deployment</DialogTitle>
             <DialogContent sx={{ minWidth: "600px" }}>
                 <Grid container spacing={2} sx={{p: 1}}>
                     <Grid item xs={12}>
@@ -86,4 +86,4 @@ const AddModelDeploymentDialog = ({ open, onClose, onSuccess, refetch, modelId }
     );
 };
 
-export default AddModelDeploymentDialog;
+export default AddStorageDeploymentDialog;

@@ -32,6 +32,12 @@ export type AddRepositoryInput = {
   url?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AddStorageDeploymentInput = {
+  cpu: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  memory: Scalars['String']['input'];
+};
+
 export type AddStorageInput = {
   name: Scalars['String']['input'];
   type: StorageType;
@@ -86,6 +92,7 @@ export type Mutation = {
   addModelDeployment: Model;
   addRepository: Repository;
   addStorage: Storage;
+  addStorageDeployment: Storage;
   deleteModel: Model;
   deleteRepository: Repository;
   deleteStorage: Storage;
@@ -109,6 +116,11 @@ export type MutationAddRepositoryArgs = {
 
 export type MutationAddStorageArgs = {
   input: AddStorageInput;
+};
+
+
+export type MutationAddStorageDeploymentArgs = {
+  input: AddStorageDeploymentInput;
 };
 
 
@@ -169,10 +181,18 @@ export enum RepositoryType {
 
 export type Storage = {
   __typename?: 'Storage';
+  deployment?: Maybe<StorageDeployment>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   status: StorageStatus;
   type: StorageType;
+};
+
+export type StorageDeployment = {
+  __typename?: 'StorageDeployment';
+  cpu: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  memory: Scalars['String']['output'];
 };
 
 export enum StorageStatus {

@@ -107,7 +107,7 @@ func (r *ModelReconciler) ensureInferenceService(ctx context.Context, model v1al
 		inferenceService.Spec.Predictor.PodSpec.Containers[0].Resources.Limits[corev1.ResourceMemory] != model.Spec.Deployment.Memory { // Update the inference service if any of the deployment spec fields have changed.
 
 		log.Info("Updating InferenceService", "Model.Namespace", model.Namespace, "Model.Name", model.Name)
-		
+
 		inferenceService.Spec.Predictor.PodSpec.Containers[0].Resources.Limits[corev1.ResourceCPU] = model.Spec.Deployment.CPU
 		inferenceService.Spec.Predictor.PodSpec.Containers[0].Resources.Limits[corev1.ResourceMemory] = model.Spec.Deployment.Memory
 		if err := r.Update(ctx, inferenceService); err != nil {

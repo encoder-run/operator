@@ -676,7 +676,6 @@ metadata:
   name: tcp-services
   namespace: ingress-nginx
 data:
-  28000: "istio-system/istio-ingressgateway:80"
-  28080: "istio-system/istio-ingressgateway:80"
-  28081: "istio-system/istio-ingressgateway:80"
-  28082: "istio-system/istio-ingressgateway:80"
+  32080: "istio-system/istio-ingressgateway:80"
+  32081: "istio-system/istio-ingressgateway:80"
+  32082: "istio-system/istio-ingressgateway:80"

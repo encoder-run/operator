@@ -8,6 +8,7 @@ import (
 	"github.com/encoder-run/operator/pkg/common"
 	"github.com/encoder-run/operator/pkg/graph/converters"
 	"github.com/encoder-run/operator/pkg/graph/model"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -74,6 +75,48 @@ func Add(ctx context.Context, input model.AddStorageInput) (*model.Storage, erro
 
 	// Create the storage.
 	if err := ctrlClient.Create(ctx, storageCRD); err != nil {
+		return nil, err
+	}
+
+	// Convert the storage to the model.
+	s, err := converters.StorageCRDToModel(storageCRD)
+	if err != nil {
+		return nil, err
+	}
+
+	return s, nil
+}
+
+func AddDeployment(ctx context.Context, input model.AddStorageDeploymentInput) (*model.Storage, error) {
+	// Get the controller-runtime client from the context.
+	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
+	if !ok {
+		return nil, fmt.Errorf("controller-runtime client not found in context")
+	}
+
+	cpu, err := resource.ParseQuantity(input.CPU)
+	if err != nil {
+		return nil, err
+	}
+
+	memory, err := resource.ParseQuantity(input.Memory)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get the storage.
+	storageCRD := &v1alpha1.Storage{}
+	if err := ctrlClient.Get(ctx, client.ObjectKey{Name: input.ID, Namespace: "default"}, storageCRD); err != nil {
+		return nil, err
+	}
+
+	// Update the storage.
+	storageCRD.Spec.Deployment = &v1alpha1.StorageDeploymentSpec{
+		Enabled: true,
+		CPU:     cpu,
+		Memory:  memory,
+	}
+	if err := ctrlClient.Update(ctx, storageCRD); err != nil {
 		return nil, err
 	}
 

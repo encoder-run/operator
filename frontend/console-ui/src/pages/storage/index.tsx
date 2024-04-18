@@ -7,13 +7,6 @@ import ConfirmDelete from '../../components/confirm-delete-dialog';
 import AddStorageDialog from './add-storage.dialog';
 import { useStoragesQuery } from '../../api/types';
 
-const initialStorages = [
-    { id: 1, name: 'Redis Cluster', type: 'Redis', memory: '5GB', disk: "10GB", status: 'Active' },
-    { id: 2, name: 'Main DB', type: 'PostgreSQL', memory: '5GB', disk: "10GB", status: 'Active' },
-    { id: 3, name: 'Search Engine', type: 'Elasticsearch', memory: '5GB', disk: "10GB", status: 'Inactive' },
-    // Add more storage systems here
-];
-
 export default function StoragePage() {
     const columns: GridColDef[] = [
         { field: 'id', headerName: 'ID', flex: 1, minWidth: 100 },
@@ -75,6 +68,10 @@ export default function StoragePage() {
         setStorages(filteredStorages);
     };
 
+    const onSuccessRedirect = (id: string) => {
+        navigate(`/storage/${id}`);
+    }
+
     useEffect(() => {
         setStorages(data?.storages || []);
     }, [data]);
@@ -135,6 +132,7 @@ export default function StoragePage() {
             <AddStorageDialog
                 open={openAddDialog}
                 onClose={() => setOpenAddDialog(false)}
+                onSuccess={onSuccessRedirect}
                 refetch={refetch}
             />
         </>

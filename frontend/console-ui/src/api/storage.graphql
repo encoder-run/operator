@@ -4,6 +4,11 @@ query storages {
         type
         name
         status
+        deployment {
+            enabled
+            cpu
+            memory
+        }
     }
 }
 
@@ -13,6 +18,11 @@ query getStorage($id: ID!) {
         type
         name
         status
+        deployment {
+            enabled
+            cpu
+            memory
+        }
     }
 }
 
@@ -22,6 +32,25 @@ mutation addStorage($input: AddStorageInput!) {
         type
         name
         status
+        deployment {
+            enabled
+            cpu
+            memory
+        }
+    }
+}
+
+mutation addStorageDeployment($input: AddStorageDeploymentInput!) {
+    addStorageDeployment(input: $input) {
+        id
+        type
+        name
+        status
+        deployment {
+            enabled
+            cpu
+            memory
+        }
     }
 }
 
@@ -31,5 +60,10 @@ mutation deleteStorage($id: ID!) {
         type
         name
         status
+        deployment {
+            enabled
+            cpu
+            memory
+        }
     }
 }

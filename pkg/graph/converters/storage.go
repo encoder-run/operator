@@ -23,8 +23,35 @@ func StorageCRDToModel(storageCRD *v1alpha1.Storage) (*model.Storage, error) {
 		return nil, fmt.Errorf("unknown storage type: %s", storageCRD.Spec.Type)
 	}
 
+	if storageCRD.Spec.Deployment != nil {
+		storage.Deployment = &model.StorageDeployment{
+			Enabled: storageCRD.Spec.Deployment.Enabled,
+			CPU:     storageCRD.Spec.Deployment.CPU.String(),
+			Memory:  storageCRD.Spec.Deployment.Memory.String(),
+		}
+	}
+
+	var status model.StorageStatus
+	if storageCRD.Status.State != nil {
+		switch *storageCRD.Status.State {
+		case v1alpha1.StorageStateNotDeployed:
+			status = model.StorageStatusNotDeployed
+		case v1alpha1.StorageStateDeploying:
+			status = model.StorageStatusDeploying
+		case v1alpha1.StorageStateReady:
+			status = model.StorageStatusReady
+		case v1alpha1.StorageStateError:
+			status = model.StorageStatusError
+		default:
+			return nil, fmt.Errorf("unknown storage state: %s", *storageCRD.Status.State)
+		}
+	} else {
+		// If the state is not set, then the storage is not deployed.
+		status = model.StorageStatusNotDeployed
+	}
+
+	storage.Status = status
 	storage.Type = storageType
-	storage.Status = model.StorageStatusNotDeployed
 	storage.Name = storageCRD.Name
 	return storage, nil
 }

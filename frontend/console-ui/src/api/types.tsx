@@ -38,6 +38,12 @@ export type AddRepositoryInput = {
   url?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AddStorageDeploymentInput = {
+  cpu: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  memory: Scalars['String']['input'];
+};
+
 export type AddStorageInput = {
   name: Scalars['String']['input'];
   type: StorageType;
@@ -92,6 +98,7 @@ export type Mutation = {
   addModelDeployment: Model;
   addRepository: Repository;
   addStorage: Storage;
+  addStorageDeployment: Storage;
   deleteModel: Model;
   deleteRepository: Repository;
   deleteStorage: Storage;
@@ -115,6 +122,11 @@ export type MutationAddRepositoryArgs = {
 
 export type MutationAddStorageArgs = {
   input: AddStorageInput;
+};
+
+
+export type MutationAddStorageDeploymentArgs = {
+  input: AddStorageDeploymentInput;
 };
 
 
@@ -175,10 +187,18 @@ export enum RepositoryType {
 
 export type Storage = {
   __typename?: 'Storage';
+  deployment?: Maybe<StorageDeployment>;
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   status: StorageStatus;
   type: StorageType;
+};
+
+export type StorageDeployment = {
+  __typename?: 'StorageDeployment';
+  cpu: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  memory: Scalars['String']['output'];
 };
 
 export enum StorageStatus {
@@ -256,28 +276,35 @@ export type DeleteRepositoryMutation = { __typename?: 'Mutation', deleteReposito
 export type StoragesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type StoragesQuery = { __typename?: 'Query', storages: Array<{ __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus }> };
+export type StoragesQuery = { __typename?: 'Query', storages: Array<{ __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus, deployment?: { __typename?: 'StorageDeployment', enabled: boolean, cpu: string, memory: string } | null }> };
 
 export type GetStorageQueryVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type GetStorageQuery = { __typename?: 'Query', getStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus } };
+export type GetStorageQuery = { __typename?: 'Query', getStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus, deployment?: { __typename?: 'StorageDeployment', enabled: boolean, cpu: string, memory: string } | null } };
 
 export type AddStorageMutationVariables = Exact<{
   input: AddStorageInput;
 }>;
 
 
-export type AddStorageMutation = { __typename?: 'Mutation', addStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus } };
+export type AddStorageMutation = { __typename?: 'Mutation', addStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus, deployment?: { __typename?: 'StorageDeployment', enabled: boolean, cpu: string, memory: string } | null } };
+
+export type AddStorageDeploymentMutationVariables = Exact<{
+  input: AddStorageDeploymentInput;
+}>;
+
+
+export type AddStorageDeploymentMutation = { __typename?: 'Mutation', addStorageDeployment: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus, deployment?: { __typename?: 'StorageDeployment', enabled: boolean, cpu: string, memory: string } | null } };
 
 export type DeleteStorageMutationVariables = Exact<{
   id: Scalars['ID']['input'];
 }>;
 
 
-export type DeleteStorageMutation = { __typename?: 'Mutation', deleteStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus } };
+export type DeleteStorageMutation = { __typename?: 'Mutation', deleteStorage: { __typename?: 'Storage', id: string, type: StorageType, name: string, status: StorageStatus, deployment?: { __typename?: 'StorageDeployment', enabled: boolean, cpu: string, memory: string } | null } };
 
 
 export const ModelsDocument = gql`
@@ -749,6 +776,11 @@ export const StoragesDocument = gql`
     type
     name
     status
+    deployment {
+      enabled
+      cpu
+      memory
+    }
   }
 }
     `;
@@ -797,6 +829,11 @@ export const GetStorageDocument = gql`
     type
     name
     status
+    deployment {
+      enabled
+      cpu
+      memory
+    }
   }
 }
     `;
@@ -846,6 +883,11 @@ export const AddStorageDocument = gql`
     type
     name
     status
+    deployment {
+      enabled
+      cpu
+      memory
+    }
   }
 }
     `;
@@ -881,6 +923,53 @@ export function useAddStorageMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddStorageMutationHookResult = ReturnType<typeof useAddStorageMutation>;
 export type AddStorageMutationResult = Apollo.MutationResult<AddStorageMutation>;
 export type AddStorageMutationOptions = Apollo.BaseMutationOptions<AddStorageMutation, AddStorageMutationVariables>;
+export const AddStorageDeploymentDocument = gql`
+    mutation addStorageDeployment($input: AddStorageDeploymentInput!) {
+  addStorageDeployment(input: $input) {
+    id
+    type
+    name
+    status
+    deployment {
+      enabled
+      cpu
+      memory
+    }
+  }
+}
+    `;
+export type AddStorageDeploymentMutationFn = Apollo.MutationFunction<AddStorageDeploymentMutation, AddStorageDeploymentMutationVariables>;
+export type AddStorageDeploymentComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<AddStorageDeploymentMutation, AddStorageDeploymentMutationVariables>, 'mutation'>;
+
+    export const AddStorageDeploymentComponent = (props: AddStorageDeploymentComponentProps) => (
+      <ApolloReactComponents.Mutation<AddStorageDeploymentMutation, AddStorageDeploymentMutationVariables> mutation={AddStorageDeploymentDocument} {...props} />
+    );
+    
+
+/**
+ * __useAddStorageDeploymentMutation__
+ *
+ * To run a mutation, you first call `useAddStorageDeploymentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddStorageDeploymentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addStorageDeploymentMutation, { data, loading, error }] = useAddStorageDeploymentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddStorageDeploymentMutation(baseOptions?: Apollo.MutationHookOptions<AddStorageDeploymentMutation, AddStorageDeploymentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddStorageDeploymentMutation, AddStorageDeploymentMutationVariables>(AddStorageDeploymentDocument, options);
+      }
+export type AddStorageDeploymentMutationHookResult = ReturnType<typeof useAddStorageDeploymentMutation>;
+export type AddStorageDeploymentMutationResult = Apollo.MutationResult<AddStorageDeploymentMutation>;
+export type AddStorageDeploymentMutationOptions = Apollo.BaseMutationOptions<AddStorageDeploymentMutation, AddStorageDeploymentMutationVariables>;
 export const DeleteStorageDocument = gql`
     mutation deleteStorage($id: ID!) {
   deleteStorage(id: $id) {
@@ -888,6 +977,11 @@ export const DeleteStorageDocument = gql`
     type
     name
     status
+    deployment {
+      enabled
+      cpu
+      memory
+    }
   }
 }
     `;

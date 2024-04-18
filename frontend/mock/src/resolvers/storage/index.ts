@@ -1,4 +1,4 @@
-import { Storage, StorageStatus, StorageType } from "../../api/types.js";
+import { AddStorageDeploymentInput, Storage, StorageStatus, StorageType } from "../../api/types.js";
 
 
 let storages: Storage[] = [
@@ -45,6 +45,28 @@ class StorageApi {
         };
         storages.push(newStorage);
         return newStorage;
+    }
+
+    addDeployment(input: AddStorageDeploymentInput) {
+        // Find the storage
+        const storage = storages.find(storage => storage.id === input.id);
+        if (!storage) {
+            throw new Error('Storage not found');
+        }
+        // Update the storage deployment spec
+        storage.deployment = {
+            enabled: true,
+            cpu: input.cpu,
+            memory: input.memory,
+        };
+
+        // We need to asynchronously update the storage status so that it updates
+        // after this call completes after 5 seconds.
+        setTimeout(() => {
+            storage.status = StorageStatus.Ready;
+        }, 5000);
+
+        return storage;
     }
 
     deleteStorage(id: string) {

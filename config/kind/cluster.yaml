@@ -10,6 +10,9 @@ nodes:
     nodeRegistration:
       kubeletExtraArgs:
         node-labels: "ingress-ready=true"
+  extraMounts:
+  - hostPath: /tmp/encoder-run
+    containerPath: /encoder-run
 - role: worker
   image: kindest/node:v1.23.17@sha256:e5fd1d9cd7a9a50939f9c005684df5a6d145e8d695e78463637b79464292e66c
   extraPortMappings:
@@ -19,3 +22,6 @@ nodes:
   - containerPort: 32081
     hostPort: 32081
     protocol: TCP
+  extraMounts:
+  - hostPath: /tmp/encoder-run
+    containerPath: /encoder-run

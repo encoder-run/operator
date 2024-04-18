@@ -69,13 +69,14 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddModel           func(childComplexity int, input model.AddModelInput) int
-		AddModelDeployment func(childComplexity int, input model.AddModelDeploymentInput) int
-		AddRepository      func(childComplexity int, input model.AddRepositoryInput) int
-		AddStorage         func(childComplexity int, input model.AddStorageInput) int
-		DeleteModel        func(childComplexity int, id string) int
-		DeleteRepository   func(childComplexity int, id string) int
-		DeleteStorage      func(childComplexity int, id string) int
+		AddModel             func(childComplexity int, input model.AddModelInput) int
+		AddModelDeployment   func(childComplexity int, input model.AddModelDeploymentInput) int
+		AddRepository        func(childComplexity int, input model.AddRepositoryInput) int
+		AddStorage           func(childComplexity int, input model.AddStorageInput) int
+		AddStorageDeployment func(childComplexity int, input model.AddStorageDeploymentInput) int
+		DeleteModel          func(childComplexity int, id string) int
+		DeleteRepository     func(childComplexity int, id string) int
+		DeleteStorage        func(childComplexity int, id string) int
 	}
 
 	Query struct {
@@ -97,10 +98,17 @@ type ComplexityRoot struct {
 	}
 
 	Storage struct {
-		ID     func(childComplexity int) int
-		Name   func(childComplexity int) int
-		Status func(childComplexity int) int
-		Type   func(childComplexity int) int
+		Deployment func(childComplexity int) int
+		ID         func(childComplexity int) int
+		Name       func(childComplexity int) int
+		Status     func(childComplexity int) int
+		Type       func(childComplexity int) int
+	}
+
+	StorageDeployment struct {
+		CPU     func(childComplexity int) int
+		Enabled func(childComplexity int) int
+		Memory  func(childComplexity int) int
 	}
 }
 
@@ -111,6 +119,7 @@ type MutationResolver interface {
 	AddRepository(ctx context.Context, input model.AddRepositoryInput) (*model.Repository, error)
 	DeleteRepository(ctx context.Context, id string) (*model.Repository, error)
 	AddStorage(ctx context.Context, input model.AddStorageInput) (*model.Storage, error)
+	AddStorageDeployment(ctx context.Context, input model.AddStorageDeploymentInput) (*model.Storage, error)
 	DeleteStorage(ctx context.Context, id string) (*model.Storage, error)
 }
 type QueryResolver interface {
@@ -273,6 +282,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.AddStorage(childComplexity, args["input"].(model.AddStorageInput)), true
 
+	case "Mutation.addStorageDeployment":
+		if e.complexity.Mutation.AddStorageDeployment == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addStorageDeployment_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddStorageDeployment(childComplexity, args["input"].(model.AddStorageDeploymentInput)), true
+
 	case "Mutation.deleteModel":
 		if e.complexity.Mutation.DeleteModel == nil {
 			break
@@ -408,6 +429,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Repository.URL(childComplexity), true
 
+	case "Storage.deployment":
+		if e.complexity.Storage.Deployment == nil {
+			break
+		}
+
+		return e.complexity.Storage.Deployment(childComplexity), true
+
 	case "Storage.id":
 		if e.complexity.Storage.ID == nil {
 			break
@@ -436,6 +464,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Storage.Type(childComplexity), true
 
+	case "StorageDeployment.cpu":
+		if e.complexity.StorageDeployment.CPU == nil {
+			break
+		}
+
+		return e.complexity.StorageDeployment.CPU(childComplexity), true
+
+	case "StorageDeployment.enabled":
+		if e.complexity.StorageDeployment.Enabled == nil {
+			break
+		}
+
+		return e.complexity.StorageDeployment.Enabled(childComplexity), true
+
+	case "StorageDeployment.memory":
+		if e.complexity.StorageDeployment.Memory == nil {
+			break
+		}
+
+		return e.complexity.StorageDeployment.Memory(childComplexity), true
+
 	}
 	return 0, false
 }
@@ -447,6 +496,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAddModelDeploymentInput,
 		ec.unmarshalInputAddModelInput,
 		ec.unmarshalInputAddRepositoryInput,
+		ec.unmarshalInputAddStorageDeploymentInput,
 		ec.unmarshalInputAddStorageInput,
 		ec.unmarshalInputHuggingFaceInput,
 	)
@@ -602,6 +652,21 @@ func (ec *executionContext) field_Mutation_addRepository_args(ctx context.Contex
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNAddRepositoryInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddRepositoryInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addStorageDeployment_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AddStorageDeploymentInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNAddStorageDeploymentInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddStorageDeploymentInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -1698,6 +1763,8 @@ func (ec *executionContext) fieldContext_Mutation_addStorage(ctx context.Context
 				return ec.fieldContext_Storage_type(ctx, field)
 			case "status":
 				return ec.fieldContext_Storage_status(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Storage_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Storage", field.Name)
 		},
@@ -1710,6 +1777,73 @@ func (ec *executionContext) fieldContext_Mutation_addStorage(ctx context.Context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addStorage_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_addStorageDeployment(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addStorageDeployment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().AddStorageDeployment(rctx, fc.Args["input"].(model.AddStorageDeploymentInput))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Storage)
+	fc.Result = res
+	return ec.marshalNStorage2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐStorage(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addStorageDeployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Storage_id(ctx, field)
+			case "name":
+				return ec.fieldContext_Storage_name(ctx, field)
+			case "type":
+				return ec.fieldContext_Storage_type(ctx, field)
+			case "status":
+				return ec.fieldContext_Storage_status(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Storage_deployment(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Storage", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addStorageDeployment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -1763,6 +1897,8 @@ func (ec *executionContext) fieldContext_Mutation_deleteStorage(ctx context.Cont
 				return ec.fieldContext_Storage_type(ctx, field)
 			case "status":
 				return ec.fieldContext_Storage_status(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Storage_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Storage", field.Name)
 		},
@@ -2082,6 +2218,8 @@ func (ec *executionContext) fieldContext_Query_storages(ctx context.Context, fie
 				return ec.fieldContext_Storage_type(ctx, field)
 			case "status":
 				return ec.fieldContext_Storage_status(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Storage_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Storage", field.Name)
 		},
@@ -2136,6 +2274,8 @@ func (ec *executionContext) fieldContext_Query_getStorage(ctx context.Context, f
 				return ec.fieldContext_Storage_type(ctx, field)
 			case "status":
 				return ec.fieldContext_Storage_status(ctx, field)
+			case "deployment":
+				return ec.fieldContext_Storage_deployment(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Storage", field.Name)
 		},
@@ -2718,6 +2858,187 @@ func (ec *executionContext) fieldContext_Storage_status(ctx context.Context, fie
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type StorageStatus does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Storage_deployment(ctx context.Context, field graphql.CollectedField, obj *model.Storage) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Storage_deployment(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Deployment, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.StorageDeployment)
+	fc.Result = res
+	return ec.marshalOStorageDeployment2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐStorageDeployment(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Storage_deployment(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Storage",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "enabled":
+				return ec.fieldContext_StorageDeployment_enabled(ctx, field)
+			case "cpu":
+				return ec.fieldContext_StorageDeployment_cpu(ctx, field)
+			case "memory":
+				return ec.fieldContext_StorageDeployment_memory(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type StorageDeployment", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StorageDeployment_enabled(ctx context.Context, field graphql.CollectedField, obj *model.StorageDeployment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StorageDeployment_enabled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Enabled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(bool)
+	fc.Result = res
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StorageDeployment_enabled(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StorageDeployment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StorageDeployment_cpu(ctx context.Context, field graphql.CollectedField, obj *model.StorageDeployment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StorageDeployment_cpu(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.CPU, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StorageDeployment_cpu(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StorageDeployment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _StorageDeployment_memory(ctx context.Context, field graphql.CollectedField, obj *model.StorageDeployment) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_StorageDeployment_memory(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Memory, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_StorageDeployment_memory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "StorageDeployment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -4619,6 +4940,47 @@ func (ec *executionContext) unmarshalInputAddRepositoryInput(ctx context.Context
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputAddStorageDeploymentInput(ctx context.Context, obj interface{}) (model.AddStorageDeploymentInput, error) {
+	var it model.AddStorageDeploymentInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "cpu", "memory"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "cpu":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("cpu"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CPU = data
+		case "memory":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("memory"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Memory = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAddStorageInput(ctx context.Context, obj interface{}) (model.AddStorageInput, error) {
 	var it model.AddStorageInput
 	asMap := map[string]interface{}{}
@@ -4915,6 +5277,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "addStorage":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_addStorage(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "addStorageDeployment":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addStorageDeployment(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -5223,6 +5592,57 @@ func (ec *executionContext) _Storage(ctx context.Context, sel ast.SelectionSet, 
 			}
 		case "status":
 			out.Values[i] = ec._Storage_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deployment":
+			out.Values[i] = ec._Storage_deployment(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var storageDeploymentImplementors = []string{"StorageDeployment"}
+
+func (ec *executionContext) _StorageDeployment(ctx context.Context, sel ast.SelectionSet, obj *model.StorageDeployment) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, storageDeploymentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("StorageDeployment")
+		case "enabled":
+			out.Values[i] = ec._StorageDeployment_enabled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cpu":
+			out.Values[i] = ec._StorageDeployment_cpu(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "memory":
+			out.Values[i] = ec._StorageDeployment_memory(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -5587,6 +6007,11 @@ func (ec *executionContext) unmarshalNAddModelInput2githubᚗcomᚋencoderᚑrun
 
 func (ec *executionContext) unmarshalNAddRepositoryInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddRepositoryInput(ctx context.Context, v interface{}) (model.AddRepositoryInput, error) {
 	res, err := ec.unmarshalInputAddRepositoryInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) unmarshalNAddStorageDeploymentInput2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐAddStorageDeploymentInput(ctx context.Context, v interface{}) (model.AddStorageDeploymentInput, error) {
+	res, err := ec.unmarshalInputAddStorageDeploymentInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
@@ -6194,6 +6619,13 @@ func (ec *executionContext) marshalORepositoryType2ᚖgithubᚗcomᚋencoderᚑr
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOStorageDeployment2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐStorageDeployment(ctx context.Context, sel ast.SelectionSet, v *model.StorageDeployment) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._StorageDeployment(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {
