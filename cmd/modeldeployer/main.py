@@ -36,7 +36,8 @@ class CustomModel(Model):
         for file_input in file_inputs:
             file_path = file_input["file_path"]
             source_code = file_input["code"]
-            chunks = self.chunk_code(source_code, 500)
+            hash = file_input["file_hash"]
+            chunks = self.chunk_code(source_code, hash, 500)
             all_chunks.extend(chunks)
             file_chunk_map[file_path] = (len(all_chunks) - len(chunks), len(all_chunks))
 
@@ -52,9 +53,9 @@ class CustomModel(Model):
                 chunk["embedding"] = code_emb.tolist()
             results[file_path] = {"embeddings": file_chunks}
 
-        return results
+        return {"results": results}
 
-    def chunk_code(self, code, max_token_length):
+    def chunk_code(self, code, hash, max_token_length):
         lines = code.split("\n")
         chunks = []
         current_chunk = []
@@ -93,6 +94,7 @@ class CustomModel(Model):
                     chunk_code = self.tokenizer.decode(current_chunk)
                     chunks.append({
                         "chunk_id": len(chunks),
+                        "file_hash": hash,  # Add hash to chunk for tracking purposes
                         "code": chunk_code,
                         "start_line": chunk_start_line,
                         "end_line": current_line,
@@ -112,6 +114,7 @@ class CustomModel(Model):
         chunk_code = self.tokenizer.decode(current_chunk)
         chunks.append({
             "chunk_id": len(chunks),
+            "file_hash": hash,  # Add hash to chunk for tracking purposes
             "code": chunk_code,
             "start_line": chunk_start_line,
             "end_line": current_line - 1,

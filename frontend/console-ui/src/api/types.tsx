@@ -31,9 +31,27 @@ export type AddModelInput = {
   type: ModelType;
 };
 
+export type AddPipelineDeploymentInput = {
+  enabled: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+export type AddPipelineInput = {
+  name: Scalars['String']['input'];
+  repositoryEmbeddings?: InputMaybe<AddRepositoryEmbeddingsInput>;
+  type: PipelineType;
+};
+
+export type AddRepositoryEmbeddingsInput = {
+  modelID: Scalars['ID']['input'];
+  repositoryID: Scalars['ID']['input'];
+  storageID: Scalars['ID']['input'];
+};
+
 export type AddRepositoryInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   owner?: InputMaybe<Scalars['String']['input']>;
+  token?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<RepositoryType>;
   url?: InputMaybe<Scalars['String']['input']>;
 };
@@ -96,10 +114,13 @@ export type Mutation = {
   __typename?: 'Mutation';
   addModel: Model;
   addModelDeployment: Model;
+  addPipeline: Pipeline;
+  addPipelineDeployment: Pipeline;
   addRepository: Repository;
   addStorage: Storage;
   addStorageDeployment: Storage;
   deleteModel: Model;
+  deletePipeline: Pipeline;
   deleteRepository: Repository;
   deleteStorage: Storage;
 };
@@ -112,6 +133,16 @@ export type MutationAddModelArgs = {
 
 export type MutationAddModelDeploymentArgs = {
   input: AddModelDeploymentInput;
+};
+
+
+export type MutationAddPipelineArgs = {
+  input: AddPipelineInput;
+};
+
+
+export type MutationAddPipelineDeploymentArgs = {
+  input: AddPipelineDeploymentInput;
 };
 
 
@@ -135,6 +166,11 @@ export type MutationDeleteModelArgs = {
 };
 
 
+export type MutationDeletePipelineArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -144,18 +180,65 @@ export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type Pipeline = {
+  __typename?: 'Pipeline';
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  repositoryEmbeddings?: Maybe<RepositoryEmbeddings>;
+  status: PipelineStatus;
+  type: PipelineType;
+};
+
+export type PipelineExecution = {
+  __typename?: 'PipelineExecution';
+  id: Scalars['ID']['output'];
+  status: PipelineExecutionStatus;
+};
+
+export enum PipelineExecutionStatus {
+  Active = 'ACTIVE',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+  Succeeded = 'SUCCEEDED'
+}
+
+export enum PipelineStatus {
+  Deploying = 'DEPLOYING',
+  Error = 'ERROR',
+  NotDeployed = 'NOT_DEPLOYED',
+  Ready = 'READY'
+}
+
+export enum PipelineType {
+  RepositoryEmbeddings = 'REPOSITORY_EMBEDDINGS'
+}
+
 export type Query = {
   __typename?: 'Query';
   getModel: Model;
+  getPipeline: Pipeline;
+  getPipelineExecutions: Array<PipelineExecution>;
   getRepository: Repository;
   getStorage: Storage;
   models: Array<Model>;
+  pipelines: Array<Pipeline>;
   repositories: Array<Repository>;
   storages: Array<Storage>;
 };
 
 
 export type QueryGetModelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetPipelineArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetPipelineExecutionsArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -177,6 +260,13 @@ export type Repository = {
   owner: Scalars['String']['output'];
   type: RepositoryType;
   url: Scalars['String']['output'];
+};
+
+export type RepositoryEmbeddings = {
+  __typename?: 'RepositoryEmbeddings';
+  modelID: Scalars['ID']['output'];
+  repositoryID: Scalars['ID']['output'];
+  storageID: Scalars['ID']['output'];
 };
 
 export enum RepositoryType {
@@ -246,6 +336,46 @@ export type DeleteModelMutationVariables = Exact<{
 
 
 export type DeleteModelMutation = { __typename?: 'Mutation', deleteModel: { __typename?: 'Model', id: string, type: ModelType, status: ModelStatus, displayName: string, huggingFace?: { __typename?: 'HuggingFace', organization: string, name: string, maxSequenceLength: number } | null, deployment?: { __typename?: 'ModelDeployment', enabled: boolean, cpu: string, memory: string } | null } };
+
+export type PipelinesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PipelinesQuery = { __typename?: 'Query', pipelines: Array<{ __typename?: 'Pipeline', id: string, name: string, type: PipelineType, enabled: boolean, status: PipelineStatus, repositoryEmbeddings?: { __typename?: 'RepositoryEmbeddings', repositoryID: string, modelID: string, storageID: string } | null }> };
+
+export type GetPipelineQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPipelineQuery = { __typename?: 'Query', getPipeline: { __typename?: 'Pipeline', id: string, name: string, type: PipelineType, enabled: boolean, status: PipelineStatus, repositoryEmbeddings?: { __typename?: 'RepositoryEmbeddings', repositoryID: string, modelID: string, storageID: string } | null } };
+
+export type GetPipelineExecutionsQueryVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type GetPipelineExecutionsQuery = { __typename?: 'Query', getPipelineExecutions: Array<{ __typename?: 'PipelineExecution', id: string, status: PipelineExecutionStatus }> };
+
+export type AddPipelineMutationVariables = Exact<{
+  input: AddPipelineInput;
+}>;
+
+
+export type AddPipelineMutation = { __typename?: 'Mutation', addPipeline: { __typename?: 'Pipeline', id: string, name: string, type: PipelineType, enabled: boolean, status: PipelineStatus, repositoryEmbeddings?: { __typename?: 'RepositoryEmbeddings', repositoryID: string, modelID: string, storageID: string } | null } };
+
+export type AddPipelineDeploymentMutationVariables = Exact<{
+  input: AddPipelineDeploymentInput;
+}>;
+
+
+export type AddPipelineDeploymentMutation = { __typename?: 'Mutation', addPipelineDeployment: { __typename?: 'Pipeline', id: string, name: string, type: PipelineType, enabled: boolean, status: PipelineStatus, repositoryEmbeddings?: { __typename?: 'RepositoryEmbeddings', repositoryID: string, modelID: string, storageID: string } | null } };
+
+export type DeletePipelineMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type DeletePipelineMutation = { __typename?: 'Mutation', deletePipeline: { __typename?: 'Pipeline', id: string, name: string, type: PipelineType, enabled: boolean, status: PipelineStatus, repositoryEmbeddings?: { __typename?: 'RepositoryEmbeddings', repositoryID: string, modelID: string, storageID: string } | null } };
 
 export type RepositoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -580,6 +710,306 @@ export function useDeleteModelMutation(baseOptions?: Apollo.MutationHookOptions<
 export type DeleteModelMutationHookResult = ReturnType<typeof useDeleteModelMutation>;
 export type DeleteModelMutationResult = Apollo.MutationResult<DeleteModelMutation>;
 export type DeleteModelMutationOptions = Apollo.BaseMutationOptions<DeleteModelMutation, DeleteModelMutationVariables>;
+export const PipelinesDocument = gql`
+    query pipelines {
+  pipelines {
+    id
+    name
+    type
+    enabled
+    status
+    repositoryEmbeddings {
+      repositoryID
+      modelID
+      storageID
+    }
+  }
+}
+    `;
+export type PipelinesComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<PipelinesQuery, PipelinesQueryVariables>, 'query'>;
+
+    export const PipelinesComponent = (props: PipelinesComponentProps) => (
+      <ApolloReactComponents.Query<PipelinesQuery, PipelinesQueryVariables> query={PipelinesDocument} {...props} />
+    );
+    
+
+/**
+ * __usePipelinesQuery__
+ *
+ * To run a query within a React component, call `usePipelinesQuery` and pass it any options that fit your needs.
+ * When your component renders, `usePipelinesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = usePipelinesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function usePipelinesQuery(baseOptions?: Apollo.QueryHookOptions<PipelinesQuery, PipelinesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<PipelinesQuery, PipelinesQueryVariables>(PipelinesDocument, options);
+      }
+export function usePipelinesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PipelinesQuery, PipelinesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<PipelinesQuery, PipelinesQueryVariables>(PipelinesDocument, options);
+        }
+export function usePipelinesSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<PipelinesQuery, PipelinesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<PipelinesQuery, PipelinesQueryVariables>(PipelinesDocument, options);
+        }
+export type PipelinesQueryHookResult = ReturnType<typeof usePipelinesQuery>;
+export type PipelinesLazyQueryHookResult = ReturnType<typeof usePipelinesLazyQuery>;
+export type PipelinesSuspenseQueryHookResult = ReturnType<typeof usePipelinesSuspenseQuery>;
+export type PipelinesQueryResult = Apollo.QueryResult<PipelinesQuery, PipelinesQueryVariables>;
+export const GetPipelineDocument = gql`
+    query getPipeline($id: ID!) {
+  getPipeline(id: $id) {
+    id
+    name
+    type
+    enabled
+    status
+    repositoryEmbeddings {
+      repositoryID
+      modelID
+      storageID
+    }
+  }
+}
+    `;
+export type GetPipelineComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<GetPipelineQuery, GetPipelineQueryVariables>, 'query'> & ({ variables: GetPipelineQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const GetPipelineComponent = (props: GetPipelineComponentProps) => (
+      <ApolloReactComponents.Query<GetPipelineQuery, GetPipelineQueryVariables> query={GetPipelineDocument} {...props} />
+    );
+    
+
+/**
+ * __useGetPipelineQuery__
+ *
+ * To run a query within a React component, call `useGetPipelineQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPipelineQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPipelineQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPipelineQuery(baseOptions: Apollo.QueryHookOptions<GetPipelineQuery, GetPipelineQueryVariables> & ({ variables: GetPipelineQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPipelineQuery, GetPipelineQueryVariables>(GetPipelineDocument, options);
+      }
+export function useGetPipelineLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPipelineQuery, GetPipelineQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPipelineQuery, GetPipelineQueryVariables>(GetPipelineDocument, options);
+        }
+export function useGetPipelineSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetPipelineQuery, GetPipelineQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPipelineQuery, GetPipelineQueryVariables>(GetPipelineDocument, options);
+        }
+export type GetPipelineQueryHookResult = ReturnType<typeof useGetPipelineQuery>;
+export type GetPipelineLazyQueryHookResult = ReturnType<typeof useGetPipelineLazyQuery>;
+export type GetPipelineSuspenseQueryHookResult = ReturnType<typeof useGetPipelineSuspenseQuery>;
+export type GetPipelineQueryResult = Apollo.QueryResult<GetPipelineQuery, GetPipelineQueryVariables>;
+export const GetPipelineExecutionsDocument = gql`
+    query getPipelineExecutions($id: ID!) {
+  getPipelineExecutions(id: $id) {
+    id
+    status
+  }
+}
+    `;
+export type GetPipelineExecutionsComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>, 'query'> & ({ variables: GetPipelineExecutionsQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const GetPipelineExecutionsComponent = (props: GetPipelineExecutionsComponentProps) => (
+      <ApolloReactComponents.Query<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables> query={GetPipelineExecutionsDocument} {...props} />
+    );
+    
+
+/**
+ * __useGetPipelineExecutionsQuery__
+ *
+ * To run a query within a React component, call `useGetPipelineExecutionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetPipelineExecutionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetPipelineExecutionsQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useGetPipelineExecutionsQuery(baseOptions: Apollo.QueryHookOptions<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables> & ({ variables: GetPipelineExecutionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>(GetPipelineExecutionsDocument, options);
+      }
+export function useGetPipelineExecutionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>(GetPipelineExecutionsDocument, options);
+        }
+export function useGetPipelineExecutionsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>(GetPipelineExecutionsDocument, options);
+        }
+export type GetPipelineExecutionsQueryHookResult = ReturnType<typeof useGetPipelineExecutionsQuery>;
+export type GetPipelineExecutionsLazyQueryHookResult = ReturnType<typeof useGetPipelineExecutionsLazyQuery>;
+export type GetPipelineExecutionsSuspenseQueryHookResult = ReturnType<typeof useGetPipelineExecutionsSuspenseQuery>;
+export type GetPipelineExecutionsQueryResult = Apollo.QueryResult<GetPipelineExecutionsQuery, GetPipelineExecutionsQueryVariables>;
+export const AddPipelineDocument = gql`
+    mutation addPipeline($input: AddPipelineInput!) {
+  addPipeline(input: $input) {
+    id
+    name
+    type
+    enabled
+    status
+    repositoryEmbeddings {
+      repositoryID
+      modelID
+      storageID
+    }
+  }
+}
+    `;
+export type AddPipelineMutationFn = Apollo.MutationFunction<AddPipelineMutation, AddPipelineMutationVariables>;
+export type AddPipelineComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<AddPipelineMutation, AddPipelineMutationVariables>, 'mutation'>;
+
+    export const AddPipelineComponent = (props: AddPipelineComponentProps) => (
+      <ApolloReactComponents.Mutation<AddPipelineMutation, AddPipelineMutationVariables> mutation={AddPipelineDocument} {...props} />
+    );
+    
+
+/**
+ * __useAddPipelineMutation__
+ *
+ * To run a mutation, you first call `useAddPipelineMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddPipelineMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addPipelineMutation, { data, loading, error }] = useAddPipelineMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddPipelineMutation(baseOptions?: Apollo.MutationHookOptions<AddPipelineMutation, AddPipelineMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddPipelineMutation, AddPipelineMutationVariables>(AddPipelineDocument, options);
+      }
+export type AddPipelineMutationHookResult = ReturnType<typeof useAddPipelineMutation>;
+export type AddPipelineMutationResult = Apollo.MutationResult<AddPipelineMutation>;
+export type AddPipelineMutationOptions = Apollo.BaseMutationOptions<AddPipelineMutation, AddPipelineMutationVariables>;
+export const AddPipelineDeploymentDocument = gql`
+    mutation addPipelineDeployment($input: AddPipelineDeploymentInput!) {
+  addPipelineDeployment(input: $input) {
+    id
+    name
+    type
+    enabled
+    status
+    repositoryEmbeddings {
+      repositoryID
+      modelID
+      storageID
+    }
+  }
+}
+    `;
+export type AddPipelineDeploymentMutationFn = Apollo.MutationFunction<AddPipelineDeploymentMutation, AddPipelineDeploymentMutationVariables>;
+export type AddPipelineDeploymentComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<AddPipelineDeploymentMutation, AddPipelineDeploymentMutationVariables>, 'mutation'>;
+
+    export const AddPipelineDeploymentComponent = (props: AddPipelineDeploymentComponentProps) => (
+      <ApolloReactComponents.Mutation<AddPipelineDeploymentMutation, AddPipelineDeploymentMutationVariables> mutation={AddPipelineDeploymentDocument} {...props} />
+    );
+    
+
+/**
+ * __useAddPipelineDeploymentMutation__
+ *
+ * To run a mutation, you first call `useAddPipelineDeploymentMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddPipelineDeploymentMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addPipelineDeploymentMutation, { data, loading, error }] = useAddPipelineDeploymentMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddPipelineDeploymentMutation(baseOptions?: Apollo.MutationHookOptions<AddPipelineDeploymentMutation, AddPipelineDeploymentMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<AddPipelineDeploymentMutation, AddPipelineDeploymentMutationVariables>(AddPipelineDeploymentDocument, options);
+      }
+export type AddPipelineDeploymentMutationHookResult = ReturnType<typeof useAddPipelineDeploymentMutation>;
+export type AddPipelineDeploymentMutationResult = Apollo.MutationResult<AddPipelineDeploymentMutation>;
+export type AddPipelineDeploymentMutationOptions = Apollo.BaseMutationOptions<AddPipelineDeploymentMutation, AddPipelineDeploymentMutationVariables>;
+export const DeletePipelineDocument = gql`
+    mutation deletePipeline($id: ID!) {
+  deletePipeline(id: $id) {
+    id
+    name
+    type
+    enabled
+    status
+    repositoryEmbeddings {
+      repositoryID
+      modelID
+      storageID
+    }
+  }
+}
+    `;
+export type DeletePipelineMutationFn = Apollo.MutationFunction<DeletePipelineMutation, DeletePipelineMutationVariables>;
+export type DeletePipelineComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<DeletePipelineMutation, DeletePipelineMutationVariables>, 'mutation'>;
+
+    export const DeletePipelineComponent = (props: DeletePipelineComponentProps) => (
+      <ApolloReactComponents.Mutation<DeletePipelineMutation, DeletePipelineMutationVariables> mutation={DeletePipelineDocument} {...props} />
+    );
+    
+
+/**
+ * __useDeletePipelineMutation__
+ *
+ * To run a mutation, you first call `useDeletePipelineMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeletePipelineMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deletePipelineMutation, { data, loading, error }] = useDeletePipelineMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeletePipelineMutation(baseOptions?: Apollo.MutationHookOptions<DeletePipelineMutation, DeletePipelineMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeletePipelineMutation, DeletePipelineMutationVariables>(DeletePipelineDocument, options);
+      }
+export type DeletePipelineMutationHookResult = ReturnType<typeof useDeletePipelineMutation>;
+export type DeletePipelineMutationResult = Apollo.MutationResult<DeletePipelineMutation>;
+export type DeletePipelineMutationOptions = Apollo.BaseMutationOptions<DeletePipelineMutation, DeletePipelineMutationVariables>;
 export const RepositoriesDocument = gql`
     query repositories {
   repositories {

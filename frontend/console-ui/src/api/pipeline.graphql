@@ -1,0 +1,81 @@
+query pipelines {
+    pipelines {
+        id
+        name
+        type
+        enabled
+        status
+        repositoryEmbeddings {
+            repositoryID
+            modelID
+            storageID
+        }
+    }
+}
+
+query getPipeline($id: ID!) {
+    getPipeline(id: $id) {
+        id
+        name
+        type
+        enabled
+        status
+        repositoryEmbeddings {
+            repositoryID
+            modelID
+            storageID
+        }
+    }
+}
+
+query getPipelineExecutions($id: ID!) {
+    getPipelineExecutions(id: $id) {
+        id
+        status
+    }
+}
+
+mutation addPipeline($input: AddPipelineInput!) {
+    addPipeline(input: $input) {
+        id
+        name
+        type
+        enabled
+        status
+        repositoryEmbeddings {
+            repositoryID
+            modelID
+            storageID
+        }
+    }
+}
+
+mutation addPipelineDeployment($input: AddPipelineDeploymentInput!) {
+    addPipelineDeployment(input: $input) {
+        id
+        name
+        type
+        enabled
+        status
+        repositoryEmbeddings {
+            repositoryID
+            modelID
+            storageID
+        }
+    }
+}
+
+mutation deletePipeline($id: ID!) {
+    deletePipeline(id: $id) {
+        id
+        name
+        type
+        enabled
+        status
+        repositoryEmbeddings {
+            repositoryID
+            modelID
+            storageID
+        }
+    }
+}

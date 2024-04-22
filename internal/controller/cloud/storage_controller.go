@@ -213,8 +213,8 @@ func (r *StorageReconciler) ensureStatus(ctx context.Context, storage *v1alpha1.
 		return err
 	}
 
-	// Check if the deployment is ready.
-	if deployment.Status.ReadyReplicas > 0 {
+	// Update the status to ready if the ready replicas are greater than 0 and the storage state is not equal to ready.
+	if deployment.Status.ReadyReplicas > 0 && storage.Status.State != nil && *storage.Status.State != v1alpha1.StorageStateReady {
 		// Update the status of the storage.
 		state := v1alpha1.StorageStateReady
 		storage.Status.State = &state
@@ -485,5 +485,6 @@ func (r *StorageReconciler) createDeployment(ctx context.Context, storage *v1alp
 func (r *StorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Storage{}).
+		Owns(&v1.Deployment{}).
 		Complete(r)
 }

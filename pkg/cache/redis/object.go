@@ -21,7 +21,6 @@ func (o *ObjectStorage) NewEncodedObject() plumbing.EncodedObject {
 
 // SetEncodedObject stores an encoded object in Redis.
 func (s *ObjectStorage) SetEncodedObject(obj plumbing.EncodedObject) (plumbing.Hash, error) {
-	fmt.Printf("SetEncodedObject")
 	r, err := obj.Reader()
 	if err != nil {
 		return obj.Hash(), err

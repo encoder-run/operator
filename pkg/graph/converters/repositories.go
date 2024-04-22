@@ -28,6 +28,7 @@ func RepositoryCRDToModel(repo *v1alpha1.Repository) (*model.Repository, error) 
 			Name:        repo.Spec.Github.Name,
 			Owner:       repo.Spec.Github.Owner,
 			Type:        repoType,
+			URL:         repo.Spec.Github.URL,
 			DisplayName: fmt.Sprintf("%s/%s", repo.Spec.Github.Owner, repo.Spec.Github.Name),
 		}, nil
 	}

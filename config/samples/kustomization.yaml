@@ -3,4 +3,6 @@ resources:
 - cloud_v1alpha1_model.yaml
 - cloud_v1alpha1_repository.yaml
 - cloud_v1alpha1_storage.yaml
+- cloud_v1alpha1_pipeline.yaml
+- cloud_v1alpha1_pipelineexecution.yaml
 #+kubebuilder:scaffold:manifestskustomizesamples

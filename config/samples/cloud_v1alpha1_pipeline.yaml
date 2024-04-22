@@ -1,0 +1,12 @@
+apiVersion: cloud.encoder.run/v1alpha1
+kind: Pipeline
+metadata:
+  labels:
+    app.kubernetes.io/name: pipeline
+    app.kubernetes.io/instance: pipeline-sample
+    app.kubernetes.io/part-of: operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: operator
+  name: pipeline-sample
+spec:
+  # TODO(user): Add fields here

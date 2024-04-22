@@ -33,7 +33,9 @@ export default function RepositoriesPage() {
     ];
 
     const [searchQuery, setSearchQuery] = useState('');
-    const { data, loading, error, refetch } = useRepositoriesQuery();
+    const { data, loading, error, refetch } = useRepositoriesQuery(
+        { fetchPolicy: 'network-only' }
+    );
     const [repositories, setRepositories] = useState(data?.repositories || []);
     const [deleteRepository, { data: deleteData, loading: deleteLoading, error: deleteError }] = useDeleteRepositoryMutation();
     const [selectedRepositories, setSelectedRepositories] = useState<GridRowSelectionModel>([]);
@@ -72,6 +74,10 @@ export default function RepositoriesPage() {
         );
         setRepositories(filteredRepositories);
     };
+
+    const onSuccessRedirect = (id: string) => {
+        navigate(`/repositories/${id}`);
+    }
 
     // Watch for changes in the data
     useEffect(() => {
@@ -136,6 +142,7 @@ export default function RepositoriesPage() {
             <AddRepositoryDialog
                 open={openAddDialog}
                 onClose={() => setOpenAddDialog(false)}
+                onSuccess={onSuccessRedirect}
                 refetch={refetch}
             />
         </>

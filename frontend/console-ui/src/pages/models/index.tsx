@@ -32,7 +32,9 @@ export default function ModelsPage() {
     ];
 
     const [searchQuery, setSearchQuery] = useState('');
-    const { data, loading, error, refetch } = useModelsQuery();
+    const { data, loading, error, refetch } = useModelsQuery(
+        { fetchPolicy: 'network-only' }
+    );
     const [rows, setRows] = useState(data?.models || []);
     const [deleteModel, { data: deleteData, loading: deleteLoading, error: deleteError }] = useDeleteModelMutation();
     const [selectedModels, setSelectedModels] = useState<GridRowSelectionModel>([]);

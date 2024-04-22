@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	github.com/99designs/gqlgen v0.17.45
+	github.com/gomodule/redigo v1.8.9
 	github.com/manifoldco/promptui v0.9.0
 	github.com/onsi/ginkgo/v2 v2.13.0
 	github.com/onsi/gomega v1.30.0
@@ -14,6 +15,7 @@ require (
 	k8s.io/api v0.28.4
 	k8s.io/apimachinery v0.28.4
 	k8s.io/client-go v0.28.4
+	knative.dev/pkg v0.0.0-20231115001034-97c7258e3a98
 	sigs.k8s.io/controller-runtime v0.16.3
 )
 
@@ -59,11 +61,11 @@ require (
 	google.golang.org/grpc v1.59.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	knative.dev/networking v0.0.0-20231115015815-3af9769712cd // indirect
-	knative.dev/pkg v0.0.0-20231115001034-97c7258e3a98 // indirect
 	knative.dev/serving v0.39.3 // indirect
 )
 
 require (
+	github.com/RediSearch/redisearch-go/v2 v2.1.1
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect

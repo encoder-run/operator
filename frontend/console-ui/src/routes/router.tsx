@@ -8,6 +8,8 @@ import ModelDetailsPage from "../pages/model-details";
 import CodeSearchPage from "../pages/search";
 import RepositoryDetailsPage from "../pages/repository-details";
 import StorageDetailsPage from "../pages/storage-details";
+import PipelinesPage from "../pages/pipelines";
+import PipelineDetailsPage from "../pages/pipeline-details";
 
 export const router = createBrowserRouter([
     {
@@ -25,7 +27,11 @@ export const router = createBrowserRouter([
             },
             {
                 path: "pipelines",
-                element: <></>,
+                element: <PipelinesPage />,
+            },
+            {
+                path: "pipelines/:pipelineId",
+                element: <PipelineDetailsPage />,
             },
             {
                 path: "models",

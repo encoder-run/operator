@@ -5,13 +5,15 @@ import { AddRepositoryInput, RepositoryType, useAddRepositoryMutation } from '..
 interface AddRepositoryDialogProps {
     open: boolean;
     onClose: () => void;
+    onSuccess(id: String): void;
     refetch: () => void;
 }
 
-const AddRepositoryDialog = ({ open, onClose, refetch }: AddRepositoryDialogProps) => {
+const AddRepositoryDialog = ({ open, onClose, onSuccess, refetch }: AddRepositoryDialogProps) => {
     const [type, setType] = useState('');
     const [owner, setOwner] = useState('');
     const [name, setName] = useState('');
+    const [token, setToken] = useState('');
     const [addRepository, { data, loading, error }] = useAddRepositoryMutation();
 
     const handleSubmit = () => {
@@ -20,15 +22,18 @@ const AddRepositoryDialog = ({ open, onClose, refetch }: AddRepositoryDialogProp
             type: type as RepositoryType,
             owner: owner,
             name: name,
+            token: token,
         };
         addRepository({
             variables: {
                 input: input,
             },
-        }).then(() => {
+        }).then((resp) => {
             refetch(); // Refetch the data
-        }).finally(() => {
             onClose(); // Close the dialog
+            if (resp.data?.addRepository?.id) {
+                onSuccess(resp.data.addRepository.id);
+            }
         });
     };
 
@@ -38,6 +43,7 @@ const AddRepositoryDialog = ({ open, onClose, refetch }: AddRepositoryDialogProp
             setType('');
             setOwner('');
             setName('');
+            setToken('');
         }
     }, [open]);
 
@@ -75,6 +81,15 @@ const AddRepositoryDialog = ({ open, onClose, refetch }: AddRepositoryDialogProp
                     variant="outlined"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                />
+                <TextField
+                    margin="dense"
+                    label="Token"
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={token}
+                    onChange={(e) => setToken(e.target.value)}
                 />
             </DialogContent>
             <DialogActions>

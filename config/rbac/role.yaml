@@ -53,6 +53,18 @@ rules:
   - update
   - watch
 - apiGroups:
+  - batch
+  resources:
+  - jobs
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - cloud.encoder.run
   resources:
   - models
@@ -74,6 +86,58 @@ rules:
   - cloud.encoder.run
   resources:
   - models/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelineexecutions
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelineexecutions/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelineexecutions/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelines
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelines/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelines/status
   verbs:
   - get
   - patch

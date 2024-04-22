@@ -19,8 +19,26 @@ type AddModelInput struct {
 	HuggingFace *HuggingFaceInput `json:"huggingFace,omitempty"`
 }
 
+type AddPipelineDeploymentInput struct {
+	ID      string `json:"id"`
+	Enabled bool   `json:"enabled"`
+}
+
+type AddPipelineInput struct {
+	Type                 PipelineType                  `json:"type"`
+	Name                 string                        `json:"name"`
+	RepositoryEmbeddings *AddRepositoryEmbeddingsInput `json:"repositoryEmbeddings,omitempty"`
+}
+
+type AddRepositoryEmbeddingsInput struct {
+	RepositoryID string `json:"repositoryID"`
+	ModelID      string `json:"modelID"`
+	StorageID    string `json:"storageID"`
+}
+
 type AddRepositoryInput struct {
 	URL   *string         `json:"url,omitempty"`
+	Token *string         `json:"token,omitempty"`
 	Type  *RepositoryType `json:"type,omitempty"`
 	Owner *string         `json:"owner,omitempty"`
 	Name  *string         `json:"name,omitempty"`
@@ -67,6 +85,20 @@ type ModelDeployment struct {
 type Mutation struct {
 }
 
+type Pipeline struct {
+	ID                   string                `json:"id"`
+	Name                 string                `json:"name"`
+	Type                 PipelineType          `json:"type"`
+	Enabled              bool                  `json:"enabled"`
+	Status               PipelineStatus        `json:"status"`
+	RepositoryEmbeddings *RepositoryEmbeddings `json:"repositoryEmbeddings,omitempty"`
+}
+
+type PipelineExecution struct {
+	ID     string                  `json:"id"`
+	Status PipelineExecutionStatus `json:"status"`
+}
+
 type Query struct {
 }
 
@@ -77,6 +109,12 @@ type Repository struct {
 	Owner       string         `json:"owner"`
 	Name        string         `json:"name"`
 	URL         string         `json:"url"`
+}
+
+type RepositoryEmbeddings struct {
+	RepositoryID string `json:"repositoryID"`
+	ModelID      string `json:"modelID"`
+	StorageID    string `json:"storageID"`
 }
 
 type Storage struct {
@@ -178,6 +216,135 @@ func (e *ModelType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ModelType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PipelineExecutionStatus string
+
+const (
+	PipelineExecutionStatusActive    PipelineExecutionStatus = "ACTIVE"
+	PipelineExecutionStatusSucceeded PipelineExecutionStatus = "SUCCEEDED"
+	PipelineExecutionStatusFailed    PipelineExecutionStatus = "FAILED"
+	PipelineExecutionStatusPending   PipelineExecutionStatus = "PENDING"
+)
+
+var AllPipelineExecutionStatus = []PipelineExecutionStatus{
+	PipelineExecutionStatusActive,
+	PipelineExecutionStatusSucceeded,
+	PipelineExecutionStatusFailed,
+	PipelineExecutionStatusPending,
+}
+
+func (e PipelineExecutionStatus) IsValid() bool {
+	switch e {
+	case PipelineExecutionStatusActive, PipelineExecutionStatusSucceeded, PipelineExecutionStatusFailed, PipelineExecutionStatusPending:
+		return true
+	}
+	return false
+}
+
+func (e PipelineExecutionStatus) String() string {
+	return string(e)
+}
+
+func (e *PipelineExecutionStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PipelineExecutionStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PipelineExecutionStatus", str)
+	}
+	return nil
+}
+
+func (e PipelineExecutionStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PipelineStatus string
+
+const (
+	PipelineStatusNotDeployed PipelineStatus = "NOT_DEPLOYED"
+	PipelineStatusDeploying   PipelineStatus = "DEPLOYING"
+	PipelineStatusReady       PipelineStatus = "READY"
+	PipelineStatusError       PipelineStatus = "ERROR"
+)
+
+var AllPipelineStatus = []PipelineStatus{
+	PipelineStatusNotDeployed,
+	PipelineStatusDeploying,
+	PipelineStatusReady,
+	PipelineStatusError,
+}
+
+func (e PipelineStatus) IsValid() bool {
+	switch e {
+	case PipelineStatusNotDeployed, PipelineStatusDeploying, PipelineStatusReady, PipelineStatusError:
+		return true
+	}
+	return false
+}
+
+func (e PipelineStatus) String() string {
+	return string(e)
+}
+
+func (e *PipelineStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PipelineStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PipelineStatus", str)
+	}
+	return nil
+}
+
+func (e PipelineStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type PipelineType string
+
+const (
+	PipelineTypeRepositoryEmbeddings PipelineType = "REPOSITORY_EMBEDDINGS"
+)
+
+var AllPipelineType = []PipelineType{
+	PipelineTypeRepositoryEmbeddings,
+}
+
+func (e PipelineType) IsValid() bool {
+	switch e {
+	case PipelineTypeRepositoryEmbeddings:
+		return true
+	}
+	return false
+}
+
+func (e PipelineType) String() string {
+	return string(e)
+}
+
+func (e *PipelineType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = PipelineType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid PipelineType", str)
+	}
+	return nil
+}
+
+func (e PipelineType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

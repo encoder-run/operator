@@ -1,0 +1,27 @@
+# permissions for end users to view pipelineexecutions.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: pipelineexecution-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: operator
+    app.kubernetes.io/part-of: operator
+    app.kubernetes.io/managed-by: kustomize
+  name: pipelineexecution-viewer-role
+rules:
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelineexecutions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud.encoder.run
+  resources:
+  - pipelineexecutions/status
+  verbs:
+  - get

@@ -36,4 +36,22 @@ resources:
   kind: Storage
   path: github.com/encoder-run/operator/api/cloud/v1alpha1
   version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: encoder.run
+  group: cloud
+  kind: Pipeline
+  path: github.com/encoder-run/operator/api/cloud/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: encoder.run
+  group: cloud
+  kind: PipelineExecution
+  path: github.com/encoder-run/operator/api/cloud/v1alpha1
+  version: v1alpha1
 version: "3"

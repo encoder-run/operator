@@ -9,6 +9,7 @@ import (
 
 	"github.com/encoder-run/operator/pkg/graph/model"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/models"
+	"github.com/encoder-run/operator/pkg/graph/resolvers/pipelines"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/repositories"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/storage"
 )
@@ -53,6 +54,21 @@ func (r *mutationResolver) DeleteStorage(ctx context.Context, id string) (*model
 	return storage.Delete(ctx, id)
 }
 
+// AddPipeline is the resolver for the addPipeline field.
+func (r *mutationResolver) AddPipeline(ctx context.Context, input model.AddPipelineInput) (*model.Pipeline, error) {
+	return pipelines.Add(ctx, input)
+}
+
+// AddPipelineDeployment is the resolver for the addPipelineDeployment field.
+func (r *mutationResolver) AddPipelineDeployment(ctx context.Context, input model.AddPipelineDeploymentInput) (*model.Pipeline, error) {
+	return pipelines.AddDeployment(ctx, input)
+}
+
+// DeletePipeline is the resolver for the deletePipeline field.
+func (r *mutationResolver) DeletePipeline(ctx context.Context, id string) (*model.Pipeline, error) {
+	return pipelines.Delete(ctx, id)
+}
+
 // Models is the resolver for the models field.
 func (r *queryResolver) Models(ctx context.Context) ([]*model.Model, error) {
 	return models.List(ctx)
@@ -81,6 +97,21 @@ func (r *queryResolver) Storages(ctx context.Context) ([]*model.Storage, error) 
 // GetStorage is the resolver for the getStorage field.
 func (r *queryResolver) GetStorage(ctx context.Context, id string) (*model.Storage, error) {
 	return storage.Get(ctx, id)
+}
+
+// Pipelines is the resolver for the pipelines field.
+func (r *queryResolver) Pipelines(ctx context.Context) ([]*model.Pipeline, error) {
+	return pipelines.List(ctx)
+}
+
+// GetPipeline is the resolver for the getPipeline field.
+func (r *queryResolver) GetPipeline(ctx context.Context, id string) (*model.Pipeline, error) {
+	return pipelines.Get(ctx, id)
+}
+
+// GetPipelineExecutions is the resolver for the getPipelineExecutions field.
+func (r *queryResolver) GetPipelineExecutions(ctx context.Context, id string) ([]*model.PipelineExecution, error) {
+	return pipelines.Executions(ctx, id)
 }
 
 // Mutation returns MutationResolver implementation.

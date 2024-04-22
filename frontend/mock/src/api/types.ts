@@ -25,6 +25,23 @@ export type AddModelInput = {
   type: ModelType;
 };
 
+export type AddPipelineDeploymentInput = {
+  enabled: Scalars['Boolean']['input'];
+  id: Scalars['ID']['input'];
+};
+
+export type AddPipelineInput = {
+  name: Scalars['String']['input'];
+  repositoryEmbeddings?: InputMaybe<AddRepositoryEmbeddingsInput>;
+  type: PipelineType;
+};
+
+export type AddRepositoryEmbeddingsInput = {
+  modelID: Scalars['ID']['input'];
+  repositoryID: Scalars['ID']['input'];
+  storageID: Scalars['ID']['input'];
+};
+
 export type AddRepositoryInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   owner?: InputMaybe<Scalars['String']['input']>;
@@ -90,10 +107,13 @@ export type Mutation = {
   __typename?: 'Mutation';
   addModel: Model;
   addModelDeployment: Model;
+  addPipeline: Pipeline;
+  addPipelineDeployment: Pipeline;
   addRepository: Repository;
   addStorage: Storage;
   addStorageDeployment: Storage;
   deleteModel: Model;
+  deletePipeline: Pipeline;
   deleteRepository: Repository;
   deleteStorage: Storage;
 };
@@ -106,6 +126,16 @@ export type MutationAddModelArgs = {
 
 export type MutationAddModelDeploymentArgs = {
   input: AddModelDeploymentInput;
+};
+
+
+export type MutationAddPipelineArgs = {
+  input: AddPipelineInput;
+};
+
+
+export type MutationAddPipelineDeploymentArgs = {
+  input: AddPipelineDeploymentInput;
 };
 
 
@@ -129,6 +159,11 @@ export type MutationDeleteModelArgs = {
 };
 
 
+export type MutationDeletePipelineArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
 export type MutationDeleteRepositoryArgs = {
   id: Scalars['ID']['input'];
 };
@@ -138,18 +173,65 @@ export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+export type Pipeline = {
+  __typename?: 'Pipeline';
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['ID']['output'];
+  name: Scalars['String']['output'];
+  repositoryEmbeddings?: Maybe<RepositoryEmbeddings>;
+  status: PipelineStatus;
+  type: PipelineType;
+};
+
+export type PipelineExecution = {
+  __typename?: 'PipelineExecution';
+  id: Scalars['ID']['output'];
+  status: PipelineExecutionStatus;
+};
+
+export enum PipelineExecutionStatus {
+  Active = 'ACTIVE',
+  Failed = 'FAILED',
+  Pending = 'PENDING',
+  Succeeded = 'SUCCEEDED'
+}
+
+export enum PipelineStatus {
+  Deploying = 'DEPLOYING',
+  Error = 'ERROR',
+  NotDeployed = 'NOT_DEPLOYED',
+  Ready = 'READY'
+}
+
+export enum PipelineType {
+  RepositoryEmbeddings = 'REPOSITORY_EMBEDDINGS'
+}
+
 export type Query = {
   __typename?: 'Query';
   getModel: Model;
+  getPipeline: Pipeline;
+  getPipelineExecutions: Array<PipelineExecution>;
   getRepository: Repository;
   getStorage: Storage;
   models: Array<Model>;
+  pipelines: Array<Pipeline>;
   repositories: Array<Repository>;
   storages: Array<Storage>;
 };
 
 
 export type QueryGetModelArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetPipelineArgs = {
+  id: Scalars['ID']['input'];
+};
+
+
+export type QueryGetPipelineExecutionsArgs = {
   id: Scalars['ID']['input'];
 };
 
@@ -171,6 +253,13 @@ export type Repository = {
   owner: Scalars['String']['output'];
   type: RepositoryType;
   url: Scalars['String']['output'];
+};
+
+export type RepositoryEmbeddings = {
+  __typename?: 'RepositoryEmbeddings';
+  modelID: Scalars['ID']['output'];
+  repositoryID: Scalars['ID']['output'];
+  storageID: Scalars['ID']['output'];
 };
 
 export enum RepositoryType {

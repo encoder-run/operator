@@ -7,6 +7,8 @@ import { fileURLToPath } from 'url';
 import { repositoryApi } from './resolvers/repository/index.js';
 import { modelApi } from './resolvers/model/index.js';
 import { storageApi } from './resolvers/storage/index.js';
+import { pipeline } from 'stream';
+import { pipelineApi } from './resolvers/pipeline/index.js';
 // Convert the URL to a directory name
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -36,6 +38,15 @@ const resolvers = {
         },
         getStorage: (parent, args, context, info) => {
             return storageApi.getStorage(args.id);
+        },
+        pipelines: (parent, args, context, info) => {
+            return pipelineApi.getPipelines();
+        },
+        getPipeline: (parent, args, context, info) => {
+            return pipelineApi.getPipeline(args.id);
+        },
+        getPipelineExecutions: (parent, args, context, info) => {
+            return pipelineApi.getPipelineExecutions(args.id);
         }
     },
     Mutation: {
@@ -62,7 +73,13 @@ const resolvers = {
         },
         deleteStorage: (parent, args, context, info) => {
             return storageApi.deleteStorage(args.id);
-        }
+        },
+        addPipeline: (parent, args, context, info) => {
+            return pipelineApi.addPipeline(args.input);
+        },
+        addPipelineDeployment: (parent, args, context, info) => {
+            return pipelineApi.addDeployment(args.input);
+        },
     },
   };
 

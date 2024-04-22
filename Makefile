@@ -10,6 +10,8 @@ CONSOLE_UI_IMG ?= console-ui
 CONSOLE_UI_IMG_VERSION ?= 0.0.1
 MODELDEPLOYER_IMG ?= codeembedder
 MODELDEPLOYER_IMG_VERSION ?= 0.0.1
+REPOSITORY_EMBEDDER_IMG ?= repository-embedder
+REPOSITORY_EMBEDDER_IMG_VERSION ?= 0.0.1
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.28.0
 ISTIO_VERSION=1.17.2
@@ -112,6 +114,11 @@ console-ui-build: ## Build the console-ui Docker image.
 modeldeployer-docker-build: ## Build the codeembedder Docker image.
 	docker build -t ${MODELDEPLOYER_IMG}:${MODELDEPLOYER_IMG_VERSION} -f cmd/modeldeployer/Dockerfile .
 
+.PHONY: repoembedder-build
+repoembedder-build: ## Build the repositoryembedder Docker image.
+	$(CONTAINER_TOOL) build -t ${REPOSITORY_EMBEDDER_IMG}:${REPOSITORY_EMBEDDER_IMG_VERSION} -f cmd/repositoryembedder/Dockerfile .
+
+
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple
 # architectures. (i.e. make docker-buildx IMG=myregistry/mypoperator:0.0.1). To use this option you need to:
 # - be able to use docker buildx. More info: https://docs.docker.com/build/buildx/
@@ -144,7 +151,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: kind-install manifests istio kustomize docker-build gateway-build console-ui-build modeldeployer-docker-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: kind-install manifests istio kustomize docker-build gateway-build console-ui-build modeldeployer-docker-build repoembedder-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 ifeq ("$(wildcard /tmp/encoder-run)", "")
 	@echo "kind storage folder does not exists, please execute the following command: mkdir -p /tmp/encoder-run";
 else
@@ -159,9 +166,11 @@ else
 	kind load docker-image $(GATEWAY_IMG):$(GATEWAY_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(CONSOLE_UI_IMG):$(CONSOLE_UI_IMG_VERSION) --name=$(CLUSTER_NAME)
 	kind load docker-image $(MODELDEPLOYER_IMG):$(MODELDEPLOYER_IMG_VERSION) --name=$(CLUSTER_NAME)
+	kind load docker-image $(REPOSITORY_EMBEDDER_IMG):$(REPOSITORY_EMBEDDER_IMG_VERSION) --name=$(CLUSTER_NAME)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION)
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 	make default-admin
+	make default-redis-db
 endif
 
 .PHONY: undeploy
@@ -258,3 +267,7 @@ kind-delete: # Delete the kind cluster
 .PHONY: default-admin
 default-admin: # Create a default admin user
 	kubectl apply -f config/samples/admin_rbac.yaml
+
+.PHONY: default-redis-db
+default-redis-db: # Create a default redis db
+	kubectl apply -f config/samples/cloud_v1alpha1_storage.yaml

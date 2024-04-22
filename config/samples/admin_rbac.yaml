@@ -11,8 +11,11 @@ metadata:
   namespace: default
 rules:
 - apiGroups: ["cloud.encoder.run"]
-  resources: ["models", "repositories", "storages"]
+  resources: ["models", "repositories", "storages", "pipelines", "pipelineexecutions"]
   verbs: ["*"]  # This gives full access. Adjust if necessary.
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "watch", "create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -26,4 +29,37 @@ subjects:
 roleRef:
   kind: Role
   name: admin-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline-worker
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: pipeline-worker-role
+  namespace: default
+rules:
+- apiGroups: ["cloud.encoder.run"]
+  resources: ["storages", "models", "repositories"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-worker-role-binding
+  namespace: default
+subjects:
+- kind: ServiceAccount
+  name: pipeline-worker
+  namespace: default
+roleRef:
+  kind: Role
+  name: pipeline-worker-role
   apiGroup: rbac.authorization.k8s.io

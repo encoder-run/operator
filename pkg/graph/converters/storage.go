@@ -76,7 +76,7 @@ func StorageInputToCRD(input model.AddStorageInput) (*v1alpha1.Storage, error) {
 	}
 
 	storageCRD.Spec.Type = storageType
-	storageCRD.Name = input.Name
+	storageCRD.Spec.Name = input.Name
 
 	return storageCRD, nil
 }

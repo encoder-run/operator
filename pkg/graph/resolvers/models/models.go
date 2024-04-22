@@ -129,6 +129,7 @@ func AddDeployment(ctx context.Context, input model.AddModelDeploymentInput) (*m
 	}
 
 	return m, nil
+
 }
 
 func Delete(ctx context.Context, id string) (*model.Model, error) {

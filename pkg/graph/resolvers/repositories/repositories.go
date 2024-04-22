@@ -8,6 +8,7 @@ import (
 	"github.com/encoder-run/operator/pkg/common"
 	"github.com/encoder-run/operator/pkg/graph/converters"
 	"github.com/encoder-run/operator/pkg/graph/model"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -103,6 +104,9 @@ func add(ctx context.Context, c client.Client, input *model.AddRepositoryInput) 
 	if input.Type == nil {
 		return nil, fmt.Errorf("type cannot be empty")
 	}
+	if input.Token == nil {
+		return nil, fmt.Errorf("token cannot be empty")
+	}
 	// Build the url based on the type, owner, and name.
 	url := converters.RepositoryURL(*input.Type, *input.Owner, *input.Name)
 	if url == "" {
@@ -111,6 +115,7 @@ func add(ctx context.Context, c client.Client, input *model.AddRepositoryInput) 
 
 	switch *input.Type {
 	case model.RepositoryTypeGithub:
+		// Create the repo
 		repo := &v1alpha1.Repository{
 			ObjectMeta: v1.ObjectMeta{
 				GenerateName: "repo-",
@@ -128,6 +133,22 @@ func add(ctx context.Context, c client.Client, input *model.AddRepositoryInput) 
 		if err := c.Create(ctx, repo); err != nil {
 			return nil, err
 		}
+
+		// Create the secret with the name of the repository.
+		secret := &corev1.Secret{
+			ObjectMeta: v1.ObjectMeta{
+				Name:      repo.Name,
+				Namespace: repo.Namespace,
+			},
+			Data: map[string][]byte{
+				"token": []byte(*input.Token),
+			},
+		}
+
+		if err := c.Create(ctx, secret); err != nil {
+			return nil, err
+		}
+
 		return converters.RepositoryCRDToModel(repo)
 	default:
 		return nil, fmt.Errorf("unsupported repository type: %s", *input.Type)

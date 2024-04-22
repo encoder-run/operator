@@ -30,6 +30,24 @@ enum StorageStatus {
   ERROR
 }
 
+enum PipelineType {
+  REPOSITORY_EMBEDDINGS
+}
+
+enum PipelineStatus {
+  NOT_DEPLOYED
+  DEPLOYING
+  READY
+  ERROR
+}
+
+enum PipelineExecutionStatus {
+  ACTIVE
+  SUCCEEDED
+  FAILED
+  PENDING
+}
+
 type Repository {
   id: ID!
   type: RepositoryType!
@@ -39,13 +57,10 @@ type Repository {
   url: String!
 }
 
-input AddRepositoryInput {
-  # url or owner and name should be provided
-  url: String
-
-  type: RepositoryType
-  owner: String
-  name: String
+type RepositoryEmbeddings {
+  repositoryID: ID!
+  modelID: ID!
+  storageID: ID!
 }
 
 type HuggingFace {
@@ -83,6 +98,20 @@ type StorageDeployment {
   memory: String!
 }
 
+type Pipeline {
+  id: ID!
+  name: String!
+  type: PipelineType!
+  enabled: Boolean!
+  status: PipelineStatus!
+  repositoryEmbeddings: RepositoryEmbeddings
+}
+
+type PipelineExecution {
+  id: ID!
+  status: PipelineExecutionStatus!
+}
+
 type Query {
   models: [Model!]!
   getModel(id: ID!): Model!
@@ -90,6 +119,19 @@ type Query {
   getRepository(id: ID!): Repository!
   storages: [Storage!]!
   getStorage(id: ID!): Storage!
+  pipelines: [Pipeline!]!
+  getPipeline(id: ID!): Pipeline!
+  getPipelineExecutions(id: ID!): [PipelineExecution!]!
+}
+
+input AddRepositoryInput {
+  # url or owner and name should be provided
+  url: String
+  token: String
+
+  type: RepositoryType
+  owner: String
+  name: String
 }
 
 input HuggingFaceInput {
@@ -120,6 +162,23 @@ input AddStorageDeploymentInput {
   memory: String!
 }
 
+input AddPipelineInput {
+  type: PipelineType!
+  name: String!
+  repositoryEmbeddings: AddRepositoryEmbeddingsInput
+}
+
+input AddRepositoryEmbeddingsInput {
+  repositoryID: ID!
+  modelID: ID!
+  storageID: ID!
+}
+
+input AddPipelineDeploymentInput {
+  id: ID!
+  enabled: Boolean!
+}
+
 type Mutation {
   addModel(input: AddModelInput!): Model!
   addModelDeployment(input: AddModelDeploymentInput!): Model!
@@ -129,4 +188,7 @@ type Mutation {
   addStorage(input: AddStorageInput!): Storage!
   addStorageDeployment(input: AddStorageDeploymentInput!): Storage!
   deleteStorage(id: ID!): Storage!
+  addPipeline(input: AddPipelineInput!): Pipeline!
+  addPipelineDeployment(input: AddPipelineDeploymentInput!): Pipeline!
+  deletePipeline(id: ID!): Pipeline!
 }
