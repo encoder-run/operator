@@ -151,7 +151,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 	$(KUSTOMIZE) build config/crd | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -
 
 .PHONY: deploy
-deploy: kind-install manifests istio kustomize docker-build gateway-build console-ui-build modeldeployer-docker-build repoembedder-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+deploy: kind-install cert-manager-install manifests istio kustomize docker-build gateway-build console-ui-build modeldeployer-docker-build repoembedder-build ## Deploy controller to the K8s cluster specified in ~/.kube/config.
 ifeq ("$(wildcard /tmp/encoder-run)", "")
 	@echo "kind storage folder does not exists, please execute the following command: mkdir -p /tmp/encoder-run";
 else
