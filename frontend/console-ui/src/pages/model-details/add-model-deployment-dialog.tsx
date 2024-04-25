@@ -54,6 +54,8 @@ const AddModelDeploymentDialog = ({ open, onClose, onSuccess, refetch, modelId }
                                 <MenuItem value="0.5">0.5 vCPUs</MenuItem>
                                 <MenuItem value="1">1 vCPU</MenuItem>
                                 <MenuItem value="2">2 vCPUs</MenuItem>
+                                <MenuItem value="4">4 vCPUs</MenuItem>
+                                <MenuItem value="4">8 vCPUs</MenuItem>
                             </Select>
                         </FormControl>
                     </Grid>
