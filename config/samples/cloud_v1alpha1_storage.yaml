@@ -1,7 +1,7 @@
 apiVersion: cloud.encoder.run/v1alpha1
 kind: Storage
 metadata:
-  name: storage-asdf
+  name: storage-default
 spec:
   deployment:
     cpu: "2"

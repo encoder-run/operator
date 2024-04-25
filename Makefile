@@ -171,6 +171,7 @@ else
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 	make default-admin
 	make default-redis-db
+	make default-model
 endif
 
 .PHONY: undeploy
@@ -271,3 +272,7 @@ default-admin: # Create a default admin user
 .PHONY: default-redis-db
 default-redis-db: # Create a default redis db
 	kubectl apply -f config/samples/cloud_v1alpha1_storage.yaml
+
+.PHONY: default-model
+default-model: # Create a default model
+	kubectl apply -f config/samples/cloud_v1alpha1_model.yaml
