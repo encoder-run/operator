@@ -10,10 +10,11 @@ interface AddRepositoryDialogProps {
 }
 
 const AddRepositoryDialog = ({ open, onClose, onSuccess, refetch }: AddRepositoryDialogProps) => {
-    const [type, setType] = useState('');
+    const [type, setType] = useState<RepositoryType>(RepositoryType.Github);
     const [owner, setOwner] = useState('');
     const [name, setName] = useState('');
     const [token, setToken] = useState('');
+    const [branch, setBranch] = useState('main');
     const [addRepository, { data, loading, error }] = useAddRepositoryMutation();
 
     const handleSubmit = () => {
@@ -23,6 +24,7 @@ const AddRepositoryDialog = ({ open, onClose, onSuccess, refetch }: AddRepositor
             owner: owner,
             name: name,
             token: token,
+            branch: branch,
         };
         addRepository({
             variables: {
@@ -40,9 +42,10 @@ const AddRepositoryDialog = ({ open, onClose, onSuccess, refetch }: AddRepositor
     // Clear the form fields
     useEffect(() => {
         if (!open) {
-            setType('');
+            setType(RepositoryType.Github);
             setOwner('');
             setName('');
+            setBranch('main');
             setToken('');
         }
     }, [open]);
@@ -57,7 +60,7 @@ const AddRepositoryDialog = ({ open, onClose, onSuccess, refetch }: AddRepositor
                         labelId="type-label"
                         value={type}
                         label="Type"
-                        onChange={(e) => setType(e.target.value)}
+                        onChange={(e) => setType(e.target.value as RepositoryType)}
                     >
                         <MenuItem value="GITHUB">GitHub</MenuItem>
                         <MenuItem value="GITLAB">GitLab</MenuItem>
@@ -81,6 +84,15 @@ const AddRepositoryDialog = ({ open, onClose, onSuccess, refetch }: AddRepositor
                     variant="outlined"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                />
+                <TextField
+                    margin="dense"
+                    label="Branch"
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={branch}
+                    onChange={(e) => setBranch(e.target.value)}
                 />
                 <TextField
                     margin="dense"

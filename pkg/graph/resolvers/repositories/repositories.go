@@ -107,6 +107,9 @@ func add(ctx context.Context, c client.Client, input *model.AddRepositoryInput) 
 	if input.Token == nil {
 		return nil, fmt.Errorf("token cannot be empty")
 	}
+	if input.Branch == nil {
+		return nil, fmt.Errorf("branch cannot be empty")
+	}
 	// Build the url based on the type, owner, and name.
 	url := converters.RepositoryURL(*input.Type, *input.Owner, *input.Name)
 	if url == "" {
@@ -127,6 +130,7 @@ func add(ctx context.Context, c client.Client, input *model.AddRepositoryInput) 
 					URL:   url,
 					Owner: *input.Owner,
 					Name:  *input.Name,
+					Branch: *input.Branch,
 				},
 			},
 		}

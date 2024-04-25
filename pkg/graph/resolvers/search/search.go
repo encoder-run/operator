@@ -170,7 +170,7 @@ func extractContentWindowIndex(content string, startIndex int, endIndex int) (st
 	if endIndex > len(content) {
 		endIndex = len(content)
 	}
-	
+
 	// Calculate the starting line number
 	startLine := 1 // Line numbering starts at 1
 	for _, ch := range content[:startIndex] {
@@ -178,7 +178,7 @@ func extractContentWindowIndex(content string, startIndex int, endIndex int) (st
 			startLine++
 		}
 	}
-	
+
 	return content[startIndex:endIndex], startLine, nil
 }
 func getRedisClient(k8sClient client.Client, storage *v1alpha1.Storage) (*redis.Client, error) {

@@ -83,9 +83,11 @@ func main() {
 
 	// Repository URL for remote git repository
 	var url string
+	var branch string
 	switch repo.Spec.Type {
 	case v1alpha1.RepositoryTypeGithub:
 		url = repo.Spec.Github.URL
+		branch = repo.Spec.Github.Branch
 	default:
 		CheckIfError(fmt.Errorf("unsupported repository type: %s", repo.Spec.Type))
 	}
@@ -122,6 +124,8 @@ func main() {
 			r, err = git.Clone(storer, nil, &git.CloneOptions{
 				URL:  fmt.Sprintf("https://%s", url),
 				Auth: auth,
+				ReferenceName: plumbing.NewBranchReferenceName(branch),
+				SingleBranch:  true,
 			})
 			CheckIfError(err)
 		} else {
@@ -129,13 +133,14 @@ func main() {
 		}
 	}
 	// Fetch changes from the remote repository
+	refSpec := fmt.Sprintf("+refs/heads/%s:refs/remotes/origin/%s", branch, branch)
 	err = r.Fetch(&git.FetchOptions{
 		RemoteName: "origin",
 		RefSpecs: []config.RefSpec{
-			"+refs/heads/*:refs/remotes/origin/*",
+			config.RefSpec(refSpec),
 		},
 		Auth:  auth,
-		Depth: 3,
+		Depth: 1,
 	})
 	if err != git.NoErrAlreadyUpToDate {
 		CheckIfError(err)
@@ -146,11 +151,11 @@ func main() {
 
 	// Manually update local branch reference to match the remote tracking branch
 	// Typically in a bare repo, this might be done in response to a push or a hook
-	remoteRef, err := r.Reference(plumbing.NewRemoteReferenceName("origin", "main"), false)
+	remoteRef, err := r.Reference(plumbing.NewRemoteReferenceName("origin", branch), false)
 	CheckIfError(err)
 
 	// Update local main directly to point to the same commit
-	localRef := plumbing.NewHashReference(plumbing.NewBranchReferenceName("main"), remoteRef.Hash())
+	localRef := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branch), remoteRef.Hash())
 	err = r.Storer.SetReference(localRef)
 	CheckIfError(err)
 

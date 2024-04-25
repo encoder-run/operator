@@ -154,6 +154,7 @@ input AddRepositoryInput {
   type: RepositoryType
   owner: String
   name: String
+  branch: String
 }
 
 input HuggingFaceInput {

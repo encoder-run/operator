@@ -23,7 +23,7 @@ func (s *ConfigStorage) SetConfig(cfg *config.Config) error {
 		return err
 	}
 
-	return s.client.Set(ctx, withNamespace( s.namespacePrefix, configPrefix, ""), data, 0).Err()
+	return s.client.Set(ctx, withNamespace(s.namespacePrefix, configPrefix, ""), data, 0).Err()
 }
 
 // Config retrieves the configuration from Redis.

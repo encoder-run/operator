@@ -37,11 +37,12 @@ type AddRepositoryEmbeddingsInput struct {
 }
 
 type AddRepositoryInput struct {
-	URL   *string         `json:"url,omitempty"`
-	Token *string         `json:"token,omitempty"`
-	Type  *RepositoryType `json:"type,omitempty"`
-	Owner *string         `json:"owner,omitempty"`
-	Name  *string         `json:"name,omitempty"`
+	URL    *string         `json:"url,omitempty"`
+	Token  *string         `json:"token,omitempty"`
+	Type   *RepositoryType `json:"type,omitempty"`
+	Owner  *string         `json:"owner,omitempty"`
+	Name   *string         `json:"name,omitempty"`
+	Branch *string         `json:"branch,omitempty"`
 }
 
 type AddStorageDeploymentInput struct {

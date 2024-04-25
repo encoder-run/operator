@@ -47,7 +47,9 @@ type GithubRepositorySpec struct {
 	// Name of the repository
 	Name string `json:"name"`
 	// URL of the repository
-	URL string `json:"url,omitempty"`
+	URL string `json:"url"`
+	// Branch of the repository
+	Branch string `json:"branch,omitempty"`
 }
 
 // RepositoryStatus defines the observed state of Repository

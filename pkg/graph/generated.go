@@ -6837,7 +6837,7 @@ func (ec *executionContext) unmarshalInputAddRepositoryInput(ctx context.Context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"url", "token", "type", "owner", "name"}
+	fieldsInOrder := [...]string{"url", "token", "type", "owner", "name", "branch"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6879,6 +6879,13 @@ func (ec *executionContext) unmarshalInputAddRepositoryInput(ctx context.Context
 				return it, err
 			}
 			it.Name = data
+		case "branch":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("branch"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Branch = data
 		}
 	}
 

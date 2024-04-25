@@ -43,6 +43,7 @@ export type AddRepositoryEmbeddingsInput = {
 };
 
 export type AddRepositoryInput = {
+  branch?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   owner?: InputMaybe<Scalars['String']['input']>;
   token?: InputMaybe<Scalars['String']['input']>;

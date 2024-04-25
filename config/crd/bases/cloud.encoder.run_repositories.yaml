@@ -42,6 +42,9 @@ spec:
               github:
                 description: Github repository spec
                 properties:
+                  branch:
+                    description: Branch of the repository
+                    type: string
                   name:
                     description: Name of the repository
                     type: string
@@ -54,6 +57,7 @@ spec:
                 required:
                 - name
                 - owner
+                - url
                 type: object
               type:
                 description: Type of repository
