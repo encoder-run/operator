@@ -49,14 +49,13 @@ export default function ModelsPage() {
     };
 
     const confirmDelete = () => {
-        // Actual deletion logic here, after confirmation
-        console.log('Delete confirmed for selected rows:', selectedModels);
         // Remove selected rows from the rows state
         selectedModels.forEach(async (id) => {
-            await deleteModel({ variables: { id: String(id) } });
+            deleteModel({ variables: { id: String(id) } }).then(() => {
+                // TODO: Do this better
+                refetch();
+            });
         });
-
-        refetch();
         // Close the dialog
         setOpenConfirmDelete(false);
         // Clear selection model

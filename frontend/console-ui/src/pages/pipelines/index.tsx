@@ -46,11 +46,12 @@ export default function PipelinesPage() {
     };
 
     const confirmDelete = () => {
-        console.log('Delete confirmed for selected rows:', selectedPipelines);
         selectedPipelines.forEach(async (id) => {
-            await deletePipeline({ variables: { id: String(id) } });
+            deletePipeline({ variables: { id: String(id) } }).then(() => {
+                // TODO: Do this better
+                refetch();
+            });
         });
-        refetch();
         setOpenConfirmDelete(false);
         setSelectedPipelines([]);
     };

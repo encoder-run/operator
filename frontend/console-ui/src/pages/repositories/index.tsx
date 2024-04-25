@@ -50,14 +50,13 @@ export default function RepositoriesPage() {
     };
 
     const confirmDelete = () => {
-        // Actual deletion logic here, after confirmation
-        console.log('Delete confirmed for selected rows:', selectedRepositories);
         // Delete each of the selected repositories
         selectedRepositories.forEach(async (id) => {
-            await deleteRepository({ variables: { id: String(id) } });
+            deleteRepository({ variables: { id: String(id) } }).then(() => {
+                // TODO: Do this better
+                refetch();
+            });
         });
-
-        refetch();
         // Close the dialog
         setOpenConfirmDelete(false);
         // Clear selection model

@@ -5,7 +5,7 @@ import LaunchIcon from '@mui/icons-material/Launch';
 import { useNavigate } from 'react-router-dom';
 import ConfirmDelete from '../../components/confirm-delete-dialog';
 import AddStorageDialog from './add-storage.dialog';
-import { useStoragesQuery } from '../../api/types';
+import { useDeleteStorageMutation, useStoragesQuery } from '../../api/types';
 
 export default function StoragePage() {
     const columns: GridColDef[] = [
@@ -37,6 +37,7 @@ export default function StoragePage() {
     const {data, loading, error, refetch} = useStoragesQuery(
         { fetchPolicy: 'network-only' }
     );
+    const [deleteStorage, { data: deleteData, loading: deleteLoading, error: deleteError }] = useDeleteStorageMutation();
     const [storages, setStorages] = useState(data?.storages || []);
     const [selectionModel, setSelectionModel] = useState<GridRowSelectionModel>([]);
     const navigate = useNavigate();
@@ -49,11 +50,13 @@ export default function StoragePage() {
     };
 
     const confirmDelete = () => {
-        // Actual deletion logic here, after confirmation
-        console.log('Delete confirmed for selected rows:', selectionModel);
         // Remove selected rows from the rows state
-        const newStorages = storages.filter(storage => !selectionModel.includes(storage.id));
-        setStorages(newStorages);
+        selectionModel.forEach(async (id) => {
+            deleteStorage({ variables: { id: String(id) } }).then(() => {
+                // TODO: Do this better
+                refetch();
+            });
+        });
         // Close the dialog
         setOpenConfirmDelete(false);
         // Clear selection model
