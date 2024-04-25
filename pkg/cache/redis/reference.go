@@ -12,8 +12,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	referencePrefix = "ref"
+)
+
 type ReferenceStorage struct {
-	client *redis.Client
+	client          *redis.Client
+	namespacePrefix string
 }
 
 // SetReference stores a reference in Redis.
@@ -23,19 +28,17 @@ func (r *ReferenceStorage) SetReference(ref *plumbing.Reference) error {
 		return err
 	}
 
-	key := fmt.Sprintf("ref:%s", ref.Name())
 	data, err := json.Marshal(refMap)
 	if err != nil {
 		return err
 	}
 
-	return r.client.Set(ctx, key, data, 0).Err()
+	return r.client.Set(ctx, withNamespace(r.namespacePrefix, referencePrefix, ref.Name().String()), data, 0).Err()
 }
 
 // Reference retrieves a reference from Redis by its name.
 func (r *ReferenceStorage) Reference(name plumbing.ReferenceName) (*plumbing.Reference, error) {
-	key := fmt.Sprintf("ref:%s", name)
-	data, err := r.client.Get(ctx, key).Bytes()
+	data, err := r.client.Get(ctx, withNamespace(r.namespacePrefix, referencePrefix, name.String())).Bytes()
 	if err != nil {
 		if err == redis.Nil {
 			return nil, plumbing.ErrReferenceNotFound
@@ -51,7 +54,7 @@ func (r *ReferenceStorage) CheckAndSetReference(new, old *plumbing.Reference) er
 		return errors.New("new reference cannot be nil")
 	}
 
-	key := fmt.Sprintf("ref:%s", new.Name())
+	key := withNamespace(r.namespacePrefix, referencePrefix, new.Name().String())
 
 	// The transaction function. It will be retried if the watched keys change.
 	txnFunc := func(tx *redis.Tx) error {
@@ -102,12 +105,12 @@ func (r *ReferenceStorage) CheckAndSetReference(new, old *plumbing.Reference) er
 }
 
 // PackRefs implements storage.Storer.
-func (s *Storage) PackRefs() error {
+func (s *ReferenceStorage) PackRefs() error {
 	return nil
 }
 
 // CountLooseRefs counts the number of references stored in Redis.
-func (s *Storage) CountLooseRefs() (int, error) {
+func (s *ReferenceStorage) CountLooseRefs() (int, error) {
 	var count int
 	var cursor uint64
 	var err error
@@ -116,7 +119,7 @@ func (s *Storage) CountLooseRefs() (int, error) {
 	// We're only interested in counting keys, so we don't need to retrieve their values.
 	for {
 		var keys []string
-		keys, cursor, err = s.client.Scan(ctx, cursor, "ref:*", 0).Result()
+		keys, cursor, err = s.client.Scan(ctx, cursor, withNamespace(s.namespacePrefix, referencePrefix, "*"), 0).Result()
 		if err != nil {
 			return 0, err // Return the error if the SCAN command fails.
 		}
@@ -132,26 +135,28 @@ func (s *Storage) CountLooseRefs() (int, error) {
 }
 
 // RemoveReference implements storage.Storer.
-func (s *Storage) RemoveReference(ref plumbing.ReferenceName) error {
+func (s *ReferenceStorage) RemoveReference(ref plumbing.ReferenceName) error {
 	fmt.Printf("RemoveReference")
 	panic("unimplemented")
 }
 
 type ReferenceIter struct {
-	client   *redis.Client
-	cursor   uint64
-	keys     []string
-	moreData bool
+	client          *redis.Client
+	namespacePrefix string
+	cursor          uint64
+	keys            []string
+	moreData        bool
 }
 
 // IterReferences returns an iterator for references stored in Redis.
 func (r *ReferenceStorage) IterReferences() (storer.ReferenceIter, error) {
 	// Initialize the iterator
 	iter := &ReferenceIter{
-		client:   r.client,
-		cursor:   0,
-		keys:     nil,
-		moreData: true, // Assume there's more data until proven otherwise
+		client:          r.client,
+		namespacePrefix: r.namespacePrefix,
+		cursor:          0,
+		keys:            nil,
+		moreData:        true, // Assume there's more data until proven otherwise
 	}
 	// Perform the initial scan
 	iter.fetchNextBatch()
@@ -162,7 +167,7 @@ func (r *ReferenceStorage) IterReferences() (storer.ReferenceIter, error) {
 func (iter *ReferenceIter) fetchNextBatch() {
 	if iter.moreData {
 		var err error
-		iter.keys, iter.cursor, err = iter.client.Scan(ctx, iter.cursor, "ref:*", 100).Result()
+		iter.keys, iter.cursor, err = iter.client.Scan(ctx, iter.cursor, withNamespace(iter.namespacePrefix, referencePrefix, "*"), 100).Result()
 		if err != nil {
 			iter.moreData = false // In case of error, stop further fetching
 			return

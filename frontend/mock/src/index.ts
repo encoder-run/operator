@@ -7,8 +7,8 @@ import { fileURLToPath } from 'url';
 import { repositoryApi } from './resolvers/repository/index.js';
 import { modelApi } from './resolvers/model/index.js';
 import { storageApi } from './resolvers/storage/index.js';
-import { pipeline } from 'stream';
 import { pipelineApi } from './resolvers/pipeline/index.js';
+import { searchApi } from './resolvers/search/index.js';
 // Convert the URL to a directory name
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -47,7 +47,10 @@ const resolvers = {
         },
         getPipelineExecutions: (parent, args, context, info) => {
             return pipelineApi.getPipelineExecutions(args.id);
-        }
+        },
+        semanticSearch: (parent, args, context, info) => {
+            return searchApi.search(args.query);
+        },
     },
     Mutation: {
         addRepository: (parent, args, context, info) => {

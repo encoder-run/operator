@@ -11,8 +11,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	objectPrefix = "object"
+)
+
 type ObjectStorage struct {
-	client *redis.Client
+	client          *redis.Client
+	namespacePrefix string
 }
 
 func (o *ObjectStorage) NewEncodedObject() plumbing.EncodedObject {
@@ -31,9 +36,8 @@ func (s *ObjectStorage) SetEncodedObject(obj plumbing.EncodedObject) (plumbing.H
 		return obj.Hash(), err
 	}
 
-	// Store object data by hash as key with prefix "object:", type and hash.
-	key := fmt.Sprintf("object:%s:%s", obj.Type(), obj.Hash())
-	if err := s.client.Set(ctx, key, bytes, 0).Err(); err != nil {
+	key := fmt.Sprintf("%s:%s", obj.Type(), obj.Hash())
+	if err := s.client.Set(ctx, withNamespace(s.namespacePrefix, objectPrefix, key), bytes, 0).Err(); err != nil {
 		return plumbing.ZeroHash, err
 	}
 
@@ -54,8 +58,8 @@ func (s *ObjectStorage) EncodedObject(t plumbing.ObjectType, h plumbing.Hash) (p
 	}
 
 	// Get object data by hash as key with prefix "object:", type and hash.
-	key := fmt.Sprintf("object:%s:%s", t, h)
-	data, err := s.client.Get(ctx, key).Bytes()
+	key := fmt.Sprintf("%s:%s", t, h)
+	data, err := s.client.Get(ctx, withNamespace(s.namespacePrefix, objectPrefix, key)).Bytes()
 	if err != nil {
 		if err == redis.Nil {
 			return nil, plumbing.ErrObjectNotFound
@@ -76,7 +80,7 @@ func (s *ObjectStorage) EncodedObject(t plumbing.ObjectType, h plumbing.Hash) (p
 
 // EncodedObjectSize implements storage.Storer.
 func (s *Storage) EncodedObjectSize(h plumbing.Hash) (int64, error) {
-	pattern := fmt.Sprintf("object:*:%s", h.String())
+	pattern := withNamespace(s.namespacePrefix, objectPrefix, fmt.Sprintf("*:%s", h.String()))
 	var cursor uint64
 	var err error
 	for {
@@ -102,7 +106,7 @@ func (s *Storage) EncodedObjectSize(h plumbing.Hash) (int64, error) {
 }
 
 func (s *Storage) HasEncodedObject(h plumbing.Hash) error {
-	pattern := fmt.Sprintf("object:*:%s", h.String())
+	pattern := withNamespace(s.namespacePrefix, objectPrefix, fmt.Sprintf("*:%s", h.String()))
 	var cursor uint64
 	var err error
 	for {
@@ -122,20 +126,22 @@ func (s *Storage) HasEncodedObject(h plumbing.Hash) error {
 }
 
 type EncodedObjectIter struct {
-	client   *redis.Client
-	t        plumbing.ObjectType
-	cursor   uint64
-	keys     []string
-	moreData bool
+	client          *redis.Client
+	namespacePrefix string
+	t               plumbing.ObjectType
+	cursor          uint64
+	keys            []string
+	moreData        bool
 }
 
 // IterEncodedObjects returns an iterator for encoded objects stored in Redis.
 func (s *ObjectStorage) IterEncodedObjects(t plumbing.ObjectType) (storer.EncodedObjectIter, error) {
 	iter := &EncodedObjectIter{
-		client:   s.client,
-		t:        t,
-		cursor:   0,
-		moreData: true, // Initially assume there is data to fetch
+		client:          s.client,
+		namespacePrefix: s.namespacePrefix,
+		t:               t,
+		cursor:          0,
+		moreData:        true, // Initially assume there is data to fetch
 	}
 	iter.fetchNextBatch() // Initial fetch
 	return iter, nil
@@ -144,7 +150,7 @@ func (s *ObjectStorage) IterEncodedObjects(t plumbing.ObjectType) (storer.Encode
 // fetchNextBatch fetches the next batch of keys from Redis matching the object type pattern.
 func (iter *EncodedObjectIter) fetchNextBatch() {
 	if iter.moreData {
-		pattern := fmt.Sprintf("object:%s:*", iter.t)
+		pattern := withNamespace(iter.namespacePrefix, objectPrefix, fmt.Sprintf("%s:*", iter.t))
 		var err error
 		iter.keys, iter.cursor, err = iter.client.Scan(ctx, iter.cursor, pattern, 100).Result()
 		if err != nil {
@@ -211,7 +217,8 @@ func (iter *EncodedObjectIter) Close() {}
 
 func (s *ObjectStorage) ForEachObjectHash(fun func(plumbing.Hash) error) error {
 	// Scan for keys that match the object pattern
-	pattern := "object:*"
+
+	pattern := withNamespace(s.namespacePrefix, objectPrefix, "*")
 	var cursor uint64
 	var err error
 	for {

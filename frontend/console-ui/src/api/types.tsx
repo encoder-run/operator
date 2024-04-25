@@ -224,6 +224,7 @@ export type Query = {
   models: Array<Model>;
   pipelines: Array<Pipeline>;
   repositories: Array<Repository>;
+  semanticSearch: Array<SearchResult>;
   storages: Array<Storage>;
 };
 
@@ -252,6 +253,17 @@ export type QueryGetStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type QuerySemanticSearchArgs = {
+  query: QueryInput;
+};
+
+export type QueryInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
+};
+
 export type Repository = {
   __typename?: 'Repository';
   displayName: Scalars['String']['output'];
@@ -274,6 +286,21 @@ export enum RepositoryType {
   Github = 'GITHUB',
   Gitlab = 'GITLAB'
 }
+
+export type SearchResult = {
+  __typename?: 'SearchResult';
+  chunkID: Scalars['Int']['output'];
+  content: Scalars['String']['output'];
+  endIndex: Scalars['Int']['output'];
+  hash: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  owner: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  repo: Scalars['String']['output'];
+  score: Scalars['Float']['output'];
+  startIndex: Scalars['Int']['output'];
+  startLine: Scalars['Int']['output'];
+};
 
 export type Storage = {
   __typename?: 'Storage';
@@ -402,6 +429,13 @@ export type DeleteRepositoryMutationVariables = Exact<{
 
 
 export type DeleteRepositoryMutation = { __typename?: 'Mutation', deleteRepository: { __typename?: 'Repository', id: string, type: RepositoryType, displayName: string, owner: string, name: string, url: string } };
+
+export type SemanticSearchQueryVariables = Exact<{
+  query: QueryInput;
+}>;
+
+
+export type SemanticSearchQuery = { __typename?: 'Query', semanticSearch: Array<{ __typename?: 'SearchResult', id: string, chunkID: number, content: string, hash: string, path: string, owner: string, repo: string, startIndex: number, startLine: number, endIndex: number, score: number }> };
 
 export type StoragesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1199,6 +1233,62 @@ export function useDeleteRepositoryMutation(baseOptions?: Apollo.MutationHookOpt
 export type DeleteRepositoryMutationHookResult = ReturnType<typeof useDeleteRepositoryMutation>;
 export type DeleteRepositoryMutationResult = Apollo.MutationResult<DeleteRepositoryMutation>;
 export type DeleteRepositoryMutationOptions = Apollo.BaseMutationOptions<DeleteRepositoryMutation, DeleteRepositoryMutationVariables>;
+export const SemanticSearchDocument = gql`
+    query semanticSearch($query: QueryInput!) {
+  semanticSearch(query: $query) {
+    id
+    chunkID
+    content
+    hash
+    path
+    owner
+    repo
+    startIndex
+    startLine
+    endIndex
+    score
+  }
+}
+    `;
+export type SemanticSearchComponentProps = Omit<ApolloReactComponents.QueryComponentOptions<SemanticSearchQuery, SemanticSearchQueryVariables>, 'query'> & ({ variables: SemanticSearchQueryVariables; skip?: boolean; } | { skip: boolean; });
+
+    export const SemanticSearchComponent = (props: SemanticSearchComponentProps) => (
+      <ApolloReactComponents.Query<SemanticSearchQuery, SemanticSearchQueryVariables> query={SemanticSearchDocument} {...props} />
+    );
+    
+
+/**
+ * __useSemanticSearchQuery__
+ *
+ * To run a query within a React component, call `useSemanticSearchQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSemanticSearchQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSemanticSearchQuery({
+ *   variables: {
+ *      query: // value for 'query'
+ *   },
+ * });
+ */
+export function useSemanticSearchQuery(baseOptions: Apollo.QueryHookOptions<SemanticSearchQuery, SemanticSearchQueryVariables> & ({ variables: SemanticSearchQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SemanticSearchQuery, SemanticSearchQueryVariables>(SemanticSearchDocument, options);
+      }
+export function useSemanticSearchLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SemanticSearchQuery, SemanticSearchQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SemanticSearchQuery, SemanticSearchQueryVariables>(SemanticSearchDocument, options);
+        }
+export function useSemanticSearchSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<SemanticSearchQuery, SemanticSearchQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SemanticSearchQuery, SemanticSearchQueryVariables>(SemanticSearchDocument, options);
+        }
+export type SemanticSearchQueryHookResult = ReturnType<typeof useSemanticSearchQuery>;
+export type SemanticSearchLazyQueryHookResult = ReturnType<typeof useSemanticSearchLazyQuery>;
+export type SemanticSearchSuspenseQueryHookResult = ReturnType<typeof useSemanticSearchSuspenseQuery>;
+export type SemanticSearchQueryResult = Apollo.QueryResult<SemanticSearchQuery, SemanticSearchQueryVariables>;
 export const StoragesDocument = gql`
     query storages {
   storages {

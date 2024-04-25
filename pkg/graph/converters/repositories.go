@@ -68,11 +68,11 @@ func SplitRepositoryURL(url string) (v1alpha1.RepositoryType, string, string, er
 func RepositoryURL(repoType model.RepositoryType, owner, name string) string {
 	switch repoType {
 	case model.RepositoryTypeGithub:
-		return fmt.Sprintf("https://github.com/%s/%s", owner, name)
+		return fmt.Sprintf("github.com/%s/%s", owner, name)
 	case model.RepositoryTypeGitlab:
-		return fmt.Sprintf("https://gitlab.com/%s/%s", owner, name)
+		return fmt.Sprintf("gitlab.com/%s/%s", owner, name)
 	case model.RepositoryTypeBitbucket:
-		return fmt.Sprintf("https://bitbucket.org/%s/%s", owner, name)
+		return fmt.Sprintf("bitbucket.org/%s/%s", owner, name)
 	default:
 		return ""
 	}

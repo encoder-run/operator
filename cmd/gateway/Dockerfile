@@ -14,6 +14,7 @@ RUN go mod download && go mod verify
 COPY cmd/gateway/ .
 COPY cmd/gateway/middleware/ cmd/gateway/middleware/
 COPY pkg/graph/ pkg/graph/
+COPY pkg/embedder/ pkg/embedder/
 COPY pkg/common/ pkg/common/
 COPY api/ api/
 

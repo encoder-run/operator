@@ -45,6 +45,7 @@ export type AddRepositoryEmbeddingsInput = {
 export type AddRepositoryInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   owner?: InputMaybe<Scalars['String']['input']>;
+  token?: InputMaybe<Scalars['String']['input']>;
   type?: InputMaybe<RepositoryType>;
   url?: InputMaybe<Scalars['String']['input']>;
 };
@@ -217,6 +218,7 @@ export type Query = {
   models: Array<Model>;
   pipelines: Array<Pipeline>;
   repositories: Array<Repository>;
+  semanticSearch: Array<SearchResult>;
   storages: Array<Storage>;
 };
 
@@ -245,6 +247,17 @@ export type QueryGetStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type QuerySemanticSearchArgs = {
+  query: QueryInput;
+};
+
+export type QueryInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  query: Scalars['String']['input'];
+};
+
 export type Repository = {
   __typename?: 'Repository';
   displayName: Scalars['String']['output'];
@@ -267,6 +280,21 @@ export enum RepositoryType {
   Github = 'GITHUB',
   Gitlab = 'GITLAB'
 }
+
+export type SearchResult = {
+  __typename?: 'SearchResult';
+  chunkID: Scalars['Int']['output'];
+  content: Scalars['String']['output'];
+  endIndex: Scalars['Int']['output'];
+  hash: Scalars['String']['output'];
+  id: Scalars['ID']['output'];
+  owner: Scalars['String']['output'];
+  path: Scalars['String']['output'];
+  repo: Scalars['String']['output'];
+  score: Scalars['Float']['output'];
+  startIndex: Scalars['Int']['output'];
+  startLine: Scalars['Int']['output'];
+};
 
 export type Storage = {
   __typename?: 'Storage';

@@ -5,13 +5,18 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	shallowPrefix = "shallow"
+)
+
 type ShallowStorage struct {
-	client *redis.Client
+	client          *redis.Client
+	namespacePrefix string
 }
 
 // SetShallow stores a list of shallow commit hashes in Redis.
 func (s *ShallowStorage) SetShallow(commits []plumbing.Hash) error {
-	key := "git:shallow"
+	key := withNamespace(s.namespacePrefix, shallowPrefix, "")
 
 	// Convert plumbing.Hash slices to string slices for Redis.
 	var hashes []string
@@ -26,7 +31,7 @@ func (s *ShallowStorage) SetShallow(commits []plumbing.Hash) error {
 
 // Shallow retrieves the list of shallow commit hashes from Redis.
 func (s *ShallowStorage) Shallow() ([]plumbing.Hash, error) {
-	key := "git:shallow"
+	key := withNamespace(s.namespacePrefix, shallowPrefix, "")
 
 	// Fetch all members of the set.
 	members, err := s.client.SMembers(ctx, key).Result()

@@ -4,18 +4,17 @@ import (
 	"bytes"
 	"context"
 	"encoding/binary"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"strings"
 
 	"github.com/RediSearch/redisearch-go/v2/redisearch"
 	v1alpha1 "github.com/encoder-run/operator/api/cloud/v1alpha1"
 	rediscache "github.com/encoder-run/operator/pkg/cache/redis"
+	"github.com/encoder-run/operator/pkg/embedder"
 	"github.com/go-git/go-git/v5" // with go modules enabled (GO111MODULE=on or outside GOPATH)
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -30,75 +29,6 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
-
-// RepositorySpec represents the specification of the repository.
-type RepositorySpec struct {
-	Type string
-	URL  string
-}
-
-// Client for embedding source code files
-type EmbeddingClient struct {
-	httpClient *http.Client
-	baseURL    string
-}
-
-type CodeEmbeddingRequest struct {
-	Path    string
-	Content string
-	Hash    string
-}
-
-type CodeEmbeddingChunk struct {
-	ChunkID     int       `json:"chunk_id"`
-	FileHash    string    `json:"file_hash"`
-	Code        string    `json:"code"`
-	StartLine   int       `json:"start_line"`
-	EndLine     int       `json:"end_line"`
-	StartColumn int       `json:"start_column"`
-	EndColumn   int       `json:"end_column"`
-	Embedding   []float32 `json:"embedding"`
-}
-
-type CodeEmbeddings struct {
-	Embeddings []CodeEmbeddingChunk `json:"embeddings"`
-}
-
-type CodeEmbeddingsResponse struct {
-	Results map[string]CodeEmbeddings `json:"results"`
-}
-
-// NewEmbeddingClient creates a new client for fetching embeddings.
-func NewEmbeddingClient(modelId, namespace string) *EmbeddingClient {
-	return &EmbeddingClient{
-		httpClient: &http.Client{},
-		baseURL:    fmt.Sprintf("http://%s-predictor-default.%s.svc.cluster.local:80/v1/models/custom-model:predict", modelId, namespace),
-	}
-}
-
-// FetchEmbeddings sends a batch of file content to the inference API and retrieves embeddings.
-func (ec *EmbeddingClient) FetchEmbeddings(requests []CodeEmbeddingRequest) (*CodeEmbeddingsResponse, error) {
-	instances := make([]map[string]string, 0)
-	for _, f := range requests {
-		instances = append(instances, map[string]string{"file_path": f.Path, "code": f.Content, "file_hash": f.Hash})
-	}
-	payload, err := json.Marshal(map[string]interface{}{"instances": instances})
-	if err != nil {
-		return nil, err
-	}
-
-	resp, err := ec.httpClient.Post(ec.baseURL, "application/json", bytes.NewBuffer(payload))
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var result CodeEmbeddingsResponse
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return nil, err
-	}
-	return &result, nil
-}
 
 func main() {
 	// Define flags
@@ -148,8 +78,8 @@ func main() {
 	if err := c.Get(context.TODO(), client.ObjectKey{Name: storageId, Namespace: ns}, st); err != nil {
 		CheckIfError(err)
 	}
-	// Initialize client
-	client := NewEmbeddingClient(modelId, ns)
+	// Initialize embClient
+	embClient := embedder.NewClient(modelId, ns)
 
 	// Repository URL for remote git repository
 	var url string
@@ -171,9 +101,9 @@ func main() {
 			CheckIfError(err)
 		}
 		storer = s
-		redisearchClient = getRedisearchClient(opts, "embedding")
+		redisearchClient = getRedisearchClient(opts, fmt.Sprintf("%s:embedding", url))
 		redisClient = redis.NewClient(opts)
-		err = createIndex(redisearchClient)
+		err = createIndex(redisearchClient, url)
 		if err != nil {
 			CheckIfError(err)
 		}
@@ -190,7 +120,7 @@ func main() {
 	if err != nil {
 		if err == git.ErrRepositoryNotExists {
 			r, err = git.Clone(storer, nil, &git.CloneOptions{
-				URL:  url,
+				URL:  fmt.Sprintf("https://%s", url),
 				Auth: auth,
 			})
 			CheckIfError(err)
@@ -236,12 +166,12 @@ func main() {
 
 	// Check for existing processed hashes
 	existingHashes := make(map[string]bool)
-	existingTreeHash, err := redisClient.Get(context.Background(), "embedding:tree").Result()
+	existingTreeHash, err := redisClient.Get(context.Background(), fmt.Sprintf("%s:embedding:tree", url)).Result()
 	if err != nil && err != redis.Nil {
 		log.Fatal(err)
 	}
 	if err == nil {
-		existingHashesStr, err := redisClient.Get(context.Background(), fmt.Sprintf("embedding:tree:%s", existingTreeHash)).Result()
+		existingHashesStr, err := redisClient.Get(context.Background(), fmt.Sprintf("%s:embedding:tree:%s", url, existingTreeHash)).Result()
 		if err != nil && err != redis.Nil {
 			log.Fatal(err)
 		}
@@ -251,7 +181,7 @@ func main() {
 	}
 
 	hashes := make(map[string]bool)
-	filesBatch := []CodeEmbeddingRequest{}
+	filesBatch := []embedder.CodeEmbeddingRequest{}
 	treeIter := tree.Files()
 	batchSize := 10
 	count := 0
@@ -274,7 +204,7 @@ func main() {
 				log.Fatal(err)
 			}
 
-			filesBatch = append(filesBatch, CodeEmbeddingRequest{
+			filesBatch = append(filesBatch, embedder.CodeEmbeddingRequest{
 				Path:    file.Name,
 				Content: content,
 				Hash:    file.Hash.String(),
@@ -284,16 +214,16 @@ func main() {
 			// Process in batches of 10
 			if count >= batchSize {
 				fmt.Printf("Processing batch of files\n")
-				embeddings, err := client.FetchEmbeddings(filesBatch)
+				embeddings, err := embClient.FetchEmbeddings(filesBatch)
 				if err != nil {
 					log.Fatal(err)
 				}
-				err = setCodeEmbeddings(redisearchClient, *embeddings)
+				err = setCodeEmbeddings(redisearchClient, *embeddings, url)
 				if err != nil {
 					log.Fatal(err)
 				}
 				// Reset the batch
-				filesBatch = []CodeEmbeddingRequest{}
+				filesBatch = []embedder.CodeEmbeddingRequest{}
 				count = 0
 			}
 		} else {
@@ -304,11 +234,11 @@ func main() {
 	// Process any remaining files
 	if len(filesBatch) > 0 {
 		fmt.Printf("Processing remaining files\n")
-		embeddings, err := client.FetchEmbeddings(filesBatch)
+		embeddings, err := embClient.FetchEmbeddings(filesBatch)
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = setCodeEmbeddings(redisearchClient, *embeddings)
+		err = setCodeEmbeddings(redisearchClient, *embeddings, url)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -319,13 +249,13 @@ func main() {
 	for k := range hashes {
 		hashList = append(hashList, k)
 	}
-	// store the list of hashes as a comma-separated string for the tree (embedding:tree:<tree-hash>)
-	err = redisClient.Set(context.Background(), fmt.Sprintf("embedding:tree:%s", tree.Hash), strings.Join(hashList, ","), 0).Err()
+	// store the list of hashes as a comma-separated string for the tree (embedding:ns:tree:<tree-hash>)
+	err = redisClient.Set(context.Background(), fmt.Sprintf("%s:embedding:tree:%s", url, tree.Hash.String()), strings.Join(hashList, ","), 0).Err()
 	if err != nil {
 		log.Fatal(err)
 	}
-	// set the embedding:tree equal to the latest tree hash that was processed
-	err = redisClient.Set(context.Background(), "embedding:tree", tree.Hash.String(), 0).Err()
+	// set the embedding:ns:tree equal to the latest tree hash that was processed
+	err = redisClient.Set(context.Background(), fmt.Sprintf("%s:embedding:tree", url), tree.Hash.String(), 0).Err()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -391,15 +321,14 @@ func getRedisearchClient(opts *redis.Options, index string) *redisearch.Client {
 	return redisearch.NewClientFromPool(pool, index)
 }
 
-func createIndex(r *redisearch.Client) error {
+func createIndex(r *redisearch.Client, ns string) error {
 	// Create a schema for the index
 	sc := redisearch.NewSchema(redisearch.DefaultOptions).
 		AddField(redisearch.NewTextField("file_hash")).
+		AddField(redisearch.NewTextField("file_path")).
 		AddField(redisearch.NewNumericField("chunk_id")).
-		AddField(redisearch.NewNumericField("start_line")).
-		AddField(redisearch.NewNumericField("end_line")).
-		AddField(redisearch.NewNumericField("start_column")).
-		AddField(redisearch.NewNumericField("end_column")).
+		AddField(redisearch.NewNumericField("start_index")).
+		AddField(redisearch.NewNumericField("end_index")).
 		AddField(redisearch.NewVectorFieldOptions("embedding", redisearch.VectorFieldOptions{
 			Algorithm: redisearch.Flat,
 			Attributes: map[string]interface{}{
@@ -409,7 +338,7 @@ func createIndex(r *redisearch.Client) error {
 			},
 		}))
 
-	indexDef := redisearch.NewIndexDefinition().AddPrefix("embedding")
+	indexDef := redisearch.NewIndexDefinition().AddPrefix(fmt.Sprintf("%s:embedding:code:", ns))
 
 	info, _ := r.Info()
 	if info == nil {
@@ -424,20 +353,19 @@ func createIndex(r *redisearch.Client) error {
 	return nil
 }
 
-func setCodeEmbeddings(r *redisearch.Client, embeddings CodeEmbeddingsResponse) error {
+func setCodeEmbeddings(r *redisearch.Client, embeddings embedder.CodeEmbeddingsResponse, namespace string) error {
 	// Use a redis pipeline to set all embeddings in one go
 	docs := make([]redisearch.Document, 0)
-	for _, embs := range embeddings.Results {
+	for filePath, embs := range embeddings.Results {
 		for _, emb := range embs.Embeddings {
 			// Create a unique key for each embedding
-			key := fmt.Sprintf("embedding:%s:%s:%d", "code", emb.FileHash, emb.ChunkID)
+			key := fmt.Sprintf("%s:embedding:%s:%s:%d", namespace, "code", emb.FileHash, emb.ChunkID)
 			doc := redisearch.NewDocument(key, 1.0)
-			doc.Set("file_hash", emb.FileHash)
-			doc.Set("chunk_id", emb.ChunkID)
-			doc.Set("start_line", emb.StartLine)
-			doc.Set("end_line", emb.EndLine)
-			doc.Set("start_column", emb.StartColumn)
-			doc.Set("end_column", emb.EndColumn)
+			doc.Set("fileHash", emb.FileHash)
+			doc.Set("filePath", filePath)
+			doc.Set("chunkID", emb.ChunkID)
+			doc.Set("startIndex", emb.StartIndex)
+			doc.Set("endIndex", emb.EndIndex)
 			// Convert embedding float slice to bytes
 			buf := new(bytes.Buffer)
 			for _, val := range emb.Embedding {

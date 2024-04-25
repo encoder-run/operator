@@ -102,6 +102,12 @@ type PipelineExecution struct {
 type Query struct {
 }
 
+type QueryInput struct {
+	Query string `json:"query"`
+	Page  *int   `json:"page,omitempty"`
+	Limit *int   `json:"limit,omitempty"`
+}
+
 type Repository struct {
 	ID          string         `json:"id"`
 	Type        RepositoryType `json:"type"`
@@ -115,6 +121,20 @@ type RepositoryEmbeddings struct {
 	RepositoryID string `json:"repositoryID"`
 	ModelID      string `json:"modelID"`
 	StorageID    string `json:"storageID"`
+}
+
+type SearchResult struct {
+	ID         string  `json:"id"`
+	ChunkID    int     `json:"chunkID"`
+	Content    string  `json:"content"`
+	Hash       string  `json:"hash"`
+	Path       string  `json:"path"`
+	Owner      string  `json:"owner"`
+	Repo       string  `json:"repo"`
+	StartIndex int     `json:"startIndex"`
+	EndIndex   int     `json:"endIndex"`
+	StartLine  int     `json:"startLine"`
+	Score      float64 `json:"score"`
 }
 
 type Storage struct {

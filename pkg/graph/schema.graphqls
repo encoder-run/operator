@@ -112,6 +112,27 @@ type PipelineExecution {
   status: PipelineExecutionStatus!
 }
 
+input QueryInput {
+  query: String!
+  page: Int
+  limit: Int
+}
+
+type SearchResult {
+  id: ID!
+  chunkID: Int!
+  content: String!
+  hash: String!
+  path: String!
+  owner: String!
+  repo: String!
+  startIndex: Int!
+  endIndex: Int!
+  # Helper for the UI to show the line number
+  startLine: Int!
+  score: Float!
+}
+
 type Query {
   models: [Model!]!
   getModel(id: ID!): Model!
@@ -122,6 +143,7 @@ type Query {
   pipelines: [Pipeline!]!
   getPipeline(id: ID!): Pipeline!
   getPipelineExecutions(id: ID!): [PipelineExecution!]!
+  semanticSearch(query: QueryInput!): [SearchResult!]!
 }
 
 input AddRepositoryInput {

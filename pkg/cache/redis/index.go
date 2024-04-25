@@ -7,8 +7,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	indexPrefix = "index"
+)
+
 type IndexStorage struct {
-	client *redis.Client
+	client          *redis.Client
+	namespacePrefix string
 }
 
 // SetIndex serializes and stores the index in Redis.
@@ -20,12 +25,12 @@ func (s *IndexStorage) SetIndex(idx *index.Index) error {
 
 	// Assuming "index" is the key where the index is stored.
 	// You might want to use a more specific key based on your application's needs.
-	return s.client.Set(ctx, "index", data, 0).Err()
+	return s.client.Set(ctx, withNamespace(s.namespacePrefix, indexPrefix, ""), data, 0).Err()
 }
 
 // Index retrieves and deserializes the index from Redis.
 func (s *IndexStorage) Index() (*index.Index, error) {
-	data, err := s.client.Get(ctx, "index").Bytes()
+	data, err := s.client.Get(ctx, withNamespace(s.namespacePrefix, indexPrefix, "")).Bytes()
 	if err != nil {
 		if err == redis.Nil {
 			return &index.Index{Version: 2}, nil

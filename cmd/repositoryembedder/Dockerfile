@@ -14,6 +14,7 @@ RUN go mod download && go mod verify
 COPY cmd/repositoryembedder/ .
 COPY pkg/common/ pkg/common/
 COPY pkg/cache/ pkg/cache/
+COPY pkg/embedder/ pkg/embedder/
 COPY api/ api/
 
 # Build the Go app

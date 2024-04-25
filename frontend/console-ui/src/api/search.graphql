@@ -1,0 +1,15 @@
+query semanticSearch($query: QueryInput!) {
+    semanticSearch(query: $query) {
+        id
+        chunkID
+        content
+        hash
+        path
+        owner
+        repo
+        startIndex
+        startLine
+        endIndex
+        score
+    }
+}

@@ -11,6 +11,7 @@ import (
 	"github.com/encoder-run/operator/pkg/graph/resolvers/models"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/pipelines"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/repositories"
+	"github.com/encoder-run/operator/pkg/graph/resolvers/search"
 	"github.com/encoder-run/operator/pkg/graph/resolvers/storage"
 )
 
@@ -112,6 +113,11 @@ func (r *queryResolver) GetPipeline(ctx context.Context, id string) (*model.Pipe
 // GetPipelineExecutions is the resolver for the getPipelineExecutions field.
 func (r *queryResolver) GetPipelineExecutions(ctx context.Context, id string) ([]*model.PipelineExecution, error) {
 	return pipelines.Executions(ctx, id)
+}
+
+// SemanticSearch is the resolver for the semanticSearch field.
+func (r *queryResolver) SemanticSearch(ctx context.Context, query model.QueryInput) ([]*model.SearchResult, error) {
+	return search.Semantic(ctx, query)
 }
 
 // Mutation returns MutationResolver implementation.

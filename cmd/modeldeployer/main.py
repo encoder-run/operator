@@ -19,8 +19,8 @@ class CustomModel(Model):
         self.ready = False
 
     def load(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(f"{self.org_name}/{self.repo_name}")
-        self.model = SentenceTransformer(f"{self.org_name}/{self.repo_name}")
+        self.tokenizer = AutoTokenizer.from_pretrained(f"{self.org_name}/{self.repo_name}", trust_remote_code=True)
+        self.model = SentenceTransformer(f"{self.org_name}/{self.repo_name}", trust_remote_code=True)
         self.model.max_seq_length = self.max_sequence_length
         self.ready = True
 
@@ -56,83 +56,53 @@ class CustomModel(Model):
         return {"results": results}
 
     def chunk_code(self, code, hash, max_token_length):
-        lines = code.split("\n")
+        # Encode the entire code at once, ignoring special tokens
+        tokens_data = self.tokenizer.encode_plus(code, add_special_tokens=False, return_offsets_mapping=True)
+        tokens = tokens_data['input_ids']
+        offsets = tokens_data['offset_mapping']
+
         chunks = []
-        current_chunk = []
-        current_line = 1
-        current_token_count = 0
-        chunk_start_line = 1
-        chunk_start_column = 0
-        for line in lines:
-            line = line + '\n'  # Add newline character back in
-            tokens_data = self.tokenizer.encode_plus(line, add_special_tokens=False, return_offsets_mapping=True)
-            tokens = tokens_data['input_ids']
-            offsets = tokens_data['offset_mapping']
+        current_chunk_start_index = 0
+        total_tokens = len(tokens)
+        current_token_index = 0
 
-            # If the line is empty or only contains whitespace, skip it
-            if not tokens:
-                current_line += 1
-                continue
+        # Distribute tokens to each chunk as evenly as possible with some padding
+        tokens_per_chunk = max_token_length
+        while current_token_index < total_tokens:
+            next_token_index = min(current_token_index + tokens_per_chunk, total_tokens)
 
-            # If the line is too long, split it into multiple sublines
-            if len(tokens) > max_token_length:
-                sublines = []
-                for i in range(0, len(tokens), max_token_length):
-                    subline_tokens = tokens[i:i + max_token_length]
-                    subline_offsets = offsets[i:i + max_token_length]
-                    sublines.append((subline_tokens, subline_offsets))
-            else:
-                sublines = [(tokens, offsets)]
+            # Adjust the end index to not cut in the middle of a word
+            while next_token_index < total_tokens and offsets[next_token_index - 1][1] != offsets[next_token_index][0]:
+                next_token_index += 1
 
-            for subline_tokens, subline_offsets in sublines:
-                if current_token_count + len(subline_tokens) <= max_token_length:
-                    current_chunk.extend(subline_tokens)
-                    current_token_count += len(subline_tokens)
-                    chunk_end_column = subline_offsets[-1][1]  # End column for last token in chunk
-                else:
-                    # Finish current chunk
-                    chunk_code = self.tokenizer.decode(current_chunk)
-                    chunks.append({
-                        "chunk_id": len(chunks),
-                        "file_hash": hash,  # Add hash to chunk for tracking purposes
-                        "code": chunk_code,
-                        "start_line": chunk_start_line,
-                        "end_line": current_line,
-                        "start_column": chunk_start_column,
-                        "end_column": chunk_end_column
-                    })
-                    # Start new chunk
-                    current_chunk = subline_tokens
-                    current_token_count = len(subline_tokens)
-                    chunk_start_line = current_line
-                    chunk_start_column = subline_offsets[0][0]  # Start column for first token in new chunk
-                    chunk_end_column = subline_offsets[-1][1]  # End column for last token in new chunk
+            # Ensure not to exceed total tokens while correcting
+            next_token_index = min(next_token_index, total_tokens)
 
-            current_line += 1
+            chunk_tokens = tokens[current_chunk_start_index:next_token_index]
+            start_index = offsets[current_chunk_start_index][0]
+            end_index = offsets[next_token_index - 1][1] if next_token_index > 0 else 0
 
-        # Finish last chunk
-        chunk_code = self.tokenizer.decode(current_chunk)
-        chunks.append({
-            "chunk_id": len(chunks),
-            "file_hash": hash,  # Add hash to chunk for tracking purposes
-            "code": chunk_code,
-            "start_line": chunk_start_line,
-            "end_line": current_line - 1,
-            "start_column": chunk_start_column,
-            "end_column": chunk_end_column
-        })
+            # Manually reconstruct the text to ensure spaces are correctly included
+            chunk_code = code[start_index:end_index]
+
+            # Append the current chunk to the chunks list
+            chunks.append({
+                "chunk_id": len(chunks),
+                "code": chunk_code,
+                "file_hash": hash,
+                "start_index": start_index,
+                "end_index": end_index
+            })
+
+            # Update for the next chunk
+            current_token_index = next_token_index
+            current_chunk_start_index = next_token_index
 
         return chunks
 
-    def remove_prefix(self, input_string, prefix):
-        if input_string.startswith(prefix):
-            return input_string[len(prefix):]
-        return input_string
 
-    def remove_suffix(self, input_string, suffix):
-        if input_string.endswith(suffix):
-            return input_string[:-len(suffix)]
-        return input_string
+
+
 
 
 if __name__ == "__main__":

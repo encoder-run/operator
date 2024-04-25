@@ -89,9 +89,13 @@ export default function PipelineDetailsPage() {
         }).then(() => {
             refetch();
             // Logic to enable the pipeline should be implemented here
-            executionsRefetch();
-            console.log('Enable pipeline logic here');
+            // sleep for 1 second then refetch\
             toast.success('Pipeline enabled successfully');
+            setTimeout(() => {
+                executionsRefetch();
+            }, 500);
+
+            console.log('Enable pipeline logic here');
         });
 
     };

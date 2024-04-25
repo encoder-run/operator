@@ -7,8 +7,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
+const (
+	configPrefix = "config"
+)
+
 type ConfigStorage struct {
-	client *redis.Client
+	client          *redis.Client
+	namespacePrefix string
 }
 
 // SetConfig stores the configuration in Redis.
@@ -18,12 +23,12 @@ func (s *ConfigStorage) SetConfig(cfg *config.Config) error {
 		return err
 	}
 
-	return s.client.Set(ctx, "config", data, 0).Err()
+	return s.client.Set(ctx, withNamespace( s.namespacePrefix, configPrefix, ""), data, 0).Err()
 }
 
 // Config retrieves the configuration from Redis.
 func (s *ConfigStorage) Config() (*config.Config, error) {
-	data, err := s.client.Get(ctx, "config").Bytes()
+	data, err := s.client.Get(ctx, withNamespace(s.namespacePrefix, configPrefix, "")).Bytes()
 	if err != nil {
 		// If the key does not exist, return a new configuration.
 		if err == redis.Nil {

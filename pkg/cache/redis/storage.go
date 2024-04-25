@@ -17,8 +17,8 @@ var (
 
 // Storage implements git.Storer interface with Redis as backend.
 type Storage struct {
-	client   *redis.Client
-	moduleNS string
+	client          *redis.Client
+	namespacePrefix string
 
 	ConfigStorage
 	IndexStorage
@@ -29,18 +29,36 @@ type Storage struct {
 }
 
 // NewStorage returns a new Redis-based storage.
-func NewStorage(redisOptions *redis.Options, moduleNS string) *Storage {
+func NewStorage(redisOptions *redis.Options, ns string) *Storage {
 	c := redis.NewClient(redisOptions)
 	return &Storage{
-		client:   c,
-		moduleNS: moduleNS,
+		client:          c,
+		namespacePrefix: ns,
 
-		ConfigStorage:    ConfigStorage{client: c},
-		IndexStorage:     IndexStorage{client: c},
-		ObjectStorage:    ObjectStorage{client: c},
-		ModuleStorage:    ModuleStorage{client: c},
-		ShallowStorage:   ShallowStorage{client: c},
-		ReferenceStorage: ReferenceStorage{client: c},
+		ConfigStorage: ConfigStorage{
+			client:          c,
+			namespacePrefix: ns,
+		},
+		IndexStorage: IndexStorage{
+			client:          c,
+			namespacePrefix: ns,
+		},
+		ObjectStorage: ObjectStorage{
+			client:          c,
+			namespacePrefix: ns,
+		},
+		ModuleStorage: ModuleStorage{
+			client:          c,
+			namespacePrefix: ns,
+		},
+		ShallowStorage: ShallowStorage{
+			client:          c,
+			namespacePrefix: ns,
+		},
+		ReferenceStorage: ReferenceStorage{
+			client:          c,
+			namespacePrefix: ns,
+		},
 	}
 }
 
@@ -58,4 +76,15 @@ func (o *ObjectStorage) DeleteOldObjectPackAndIndex(plumbing.Hash, time.Time) er
 // AddAlternate implements storage.Storer.
 func (s *Storage) AddAlternate(remote string) error {
 	return errNotSupported
+}
+
+func withNamespace(ns string, keyType string, key string) string {
+	k := ns
+	if keyType != "" {
+		k = fmt.Sprintf("%s:%s", k, keyType)
+	}
+	if key != "" {
+		k = fmt.Sprintf("%s:%s", k, key)
+	}
+	return k
 }

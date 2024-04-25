@@ -3,6 +3,8 @@ torch
 torchvision
 transformers
 accelerate
-sentence-transformers
+sentence-transformers>=2.7.0
 argparse
+optimum
+onnx
 ray[serve]<=2.9.3,>=2.9.2
