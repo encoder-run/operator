@@ -27,6 +27,8 @@ This command will set up the necessary Kubernetes configurations and launch all 
 - **Console-UI** on `localhost:32081`
 - **Gateway** on `localhost:32080`
 
+## Contributing
+
 ### Running the Frontend with Mock Data
 To run the frontend interface with mock data, follow these steps:
 1. Navigate to the frontend console-UI directory:
