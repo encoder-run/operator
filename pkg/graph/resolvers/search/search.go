@@ -12,11 +12,14 @@ import (
 	"github.com/RediSearch/redisearch-go/v2/redisearch"
 	"github.com/encoder-run/operator/api/cloud/v1alpha1"
 	"github.com/encoder-run/operator/pkg/common"
+	"github.com/encoder-run/operator/pkg/database"
 	"github.com/encoder-run/operator/pkg/embedder"
 	"github.com/encoder-run/operator/pkg/graph/converters"
 	"github.com/encoder-run/operator/pkg/graph/model"
 	redigoredis "github.com/gomodule/redigo/redis"
+	"github.com/pgvector/pgvector-go"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm/clause"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -58,6 +61,12 @@ func Semantic(ctx context.Context, query model.QueryInput) ([]*model.SearchResul
 				return nil, err
 			}
 			results = append(results, rs...)
+		case v1alpha1.StorageTypePostgres:
+			rs, err := semanticSearchPostgres(ctrlClient, &pipeline, storageCRD, &query)
+			if err != nil {
+				return nil, err
+			}
+			results = append(results, rs...)
 		default:
 			return nil, fmt.Errorf("unsupported storage type: %s", storageCRD.Spec.Type)
 		}
@@ -67,6 +76,135 @@ func Semantic(ctx context.Context, query model.QueryInput) ([]*model.SearchResul
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Score < results[j].Score // Assuming the field is named 'Score' and we are sorting ascending
 	})
+	return results, nil
+}
+
+func semanticSearchPostgres(ctrlClient client.Client, pipeline *v1alpha1.Pipeline, storage *v1alpha1.Storage, query *model.QueryInput) ([]*model.SearchResult, error) {
+	// get repository object
+	repository := v1alpha1.Repository{}
+	if err := ctrlClient.Get(context.Background(), types.NamespacedName{Name: pipeline.Spec.RepositoryEmbeddings.Repository.Name, Namespace: pipeline.Namespace}, &repository); err != nil {
+		return nil, err
+	}
+
+	if repository.Spec.Type != v1alpha1.RepositoryTypeGithub {
+		return nil, fmt.Errorf("unsupported repository type: %s", repository.Spec.Type)
+	}
+	// get the password from the postgres secret
+	secret := &corev1.Secret{}
+	if err := ctrlClient.Get(context.TODO(), client.ObjectKey{Name: storage.Name, Namespace: storage.Namespace}, secret); err != nil {
+		return nil, err
+	}
+
+	hostBytes, ok := secret.Data["host"]
+	if !ok {
+		return nil, errors.New("host not found in secret")
+	}
+	host := string(hostBytes)
+
+	usernameBytes, ok := secret.Data["username"]
+	if !ok {
+		return nil, errors.New("username not found in secret")
+	}
+	username := string(usernameBytes)
+
+	passwordBytes, ok := secret.Data["password"]
+	if !ok {
+		return nil, errors.New("password not found in secret")
+	}
+	password := string(passwordBytes)
+
+	databaseBytes, ok := secret.Data["database"]
+	if !ok {
+		return nil, errors.New("database not found in secret")
+	}
+	db := string(databaseBytes)
+
+	portBytes, ok := secret.Data["port"]
+	if !ok {
+		return nil, errors.New("port not found in secret")
+	}
+	port := string(portBytes)
+
+	sslModeBytes, ok := secret.Data["ssl_mode"]
+	if !ok {
+		return nil, errors.New("ssl_mode not found in secret")
+	}
+	sslMode := string(sslModeBytes)
+
+	timezoneBytes, ok := secret.Data["timezone"]
+	if !ok {
+		return nil, errors.New("timezone not found in secret")
+	}
+	timezone := string(timezoneBytes)
+
+	// Construct the DSN
+
+	dsn := database.ConstructPostgresDSN(host, username, password, db, port, sslMode, timezone)
+	dbClient, err := database.GetPostgresClient(dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	modelId := pipeline.Spec.RepositoryEmbeddings.Model.Name
+	// search the model with the query
+	c := embedder.NewClient(modelId, pipeline.Namespace)
+	response, err := c.FetchEmbeddings([]embedder.CodeEmbeddingRequest{
+		{
+			Path:    "/",
+			Content: query.Query,
+			Hash:    "query",
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if len(response.Results) == 0 {
+		return nil, fmt.Errorf("no results returned from the model")
+	}
+
+	codeEmb, ok := response.Results["/"]
+	if !ok {
+		return nil, fmt.Errorf("no embeddings returned for the query")
+	}
+
+	if len(codeEmb.Embeddings) == 0 {
+		return nil, fmt.Errorf("no embeddings returned for the query")
+	}
+
+	emb := codeEmb.Embeddings[0].Embedding
+
+	codeEmbeddings := make([]database.CodeEmbedding, 0, len(codeEmb.Embeddings))
+
+	dbClient.Clauses(clause.OrderBy{
+		Expression: clause.Expr{
+			SQL:  "embedding <=> ? ASC", // Ensure sorting by ascending order of cosine distances
+			Vars: []interface{}{pgvector.NewVector(emb)},
+		},
+	}).Limit(25).Find(&codeEmbeddings)
+
+	results := make([]*model.SearchResult, 0, len(codeEmbeddings))
+	for _, ce := range codeEmbeddings {
+		sr := converters.CodeEmbeddingToSearchResult(&ce, &repository)
+		results = append(results, sr)
+	}
+
+	// Get the file content for the search results
+	for _, sr := range results {
+		// Get the file content from postgres
+		object := database.Object{}
+		// Select by hash, blob type, and url
+		if err := dbClient.Where("hash = ? AND type = ? AND url = ?", sr.Hash, "blob", repository.Spec.Github.URL).First(&object).Error; err != nil {
+			return nil, err
+		}
+
+		adjustedContent, startLine, err := extractContentWindowIndex(string(object.Blob), sr.StartIndex, sr.EndIndex)
+		if err != nil {
+			return nil, fmt.Errorf("failed to extract content window from file hash %s: %w", sr.Hash, err)
+		}
+		sr.Content = adjustedContent
+		sr.StartLine = startLine
+	}
+
 	return results, nil
 }
 

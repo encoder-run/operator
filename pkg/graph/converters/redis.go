@@ -6,6 +6,7 @@ import (
 
 	"github.com/RediSearch/redisearch-go/v2/redisearch"
 	"github.com/encoder-run/operator/api/cloud/v1alpha1"
+	"github.com/encoder-run/operator/pkg/database"
 	"github.com/encoder-run/operator/pkg/graph/model"
 )
 
@@ -79,4 +80,23 @@ func RedisEmbeddingDocToSearchResult(doc *redisearch.Document, repo *v1alpha1.Re
 
 	return sr, nil
 
+}
+
+func CodeEmbeddingToSearchResult(ce *database.CodeEmbedding, repo *v1alpha1.Repository) *model.SearchResult {
+	sr := &model.SearchResult{}
+	sr.ID = ce.FileHash
+	if repo.Spec.Type != v1alpha1.RepositoryTypeGithub {
+		return nil
+	}
+
+	sr.Owner = repo.Spec.Github.Owner
+	sr.Repo = repo.Spec.Github.Name
+	sr.ChunkID = ce.ChunkID
+	sr.Hash = ce.FileHash
+	sr.Path = ce.FilePath
+	sr.Score = 0.0
+	sr.StartIndex = ce.StartIndex
+	sr.EndIndex = ce.EndIndex
+
+	return sr
 }

@@ -20,6 +20,15 @@ type ObjectStorage struct {
 	namespacePrefix string
 }
 
+func (o *ObjectStorage) ObjectPacks() ([]plumbing.Hash, error) {
+	fmt.Printf("ObjectPacks")
+	return nil, nil
+}
+func (o *ObjectStorage) DeleteOldObjectPackAndIndex(plumbing.Hash, time.Time) error {
+	print("DeleteOldObjectPackAndIndex")
+	return nil
+}
+
 func (o *ObjectStorage) NewEncodedObject() plumbing.EncodedObject {
 	return &plumbing.MemoryObject{}
 }

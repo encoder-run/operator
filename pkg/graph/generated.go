@@ -783,6 +783,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAddStorageDeploymentInput,
 		ec.unmarshalInputAddStorageInput,
 		ec.unmarshalInputHuggingFaceInput,
+		ec.unmarshalInputPostgresInput,
 		ec.unmarshalInputQueryInput,
 	)
 	first := true
@@ -6940,7 +6941,7 @@ func (ec *executionContext) unmarshalInputAddStorageInput(ctx context.Context, o
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "name"}
+	fieldsInOrder := [...]string{"type", "name", "postgres"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -6961,6 +6962,13 @@ func (ec *executionContext) unmarshalInputAddStorageInput(ctx context.Context, o
 				return it, err
 			}
 			it.Name = data
+		case "postgres":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("postgres"))
+			data, err := ec.unmarshalOPostgresInput2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐPostgresInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Postgres = data
 		}
 	}
 
@@ -7002,6 +7010,82 @@ func (ec *executionContext) unmarshalInputHuggingFaceInput(ctx context.Context, 
 				return it, err
 			}
 			it.MaxSequenceLength = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputPostgresInput(ctx context.Context, obj interface{}) (model.PostgresInput, error) {
+	var it model.PostgresInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"external", "host", "port", "username", "password", "database", "SSLMode", "timezone"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "external":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("external"))
+			data, err := ec.unmarshalNBoolean2bool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.External = data
+		case "host":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("host"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Host = data
+		case "port":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("port"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Port = data
+		case "username":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("username"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Username = data
+		case "password":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("password"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Password = data
+		case "database":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("database"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Database = data
+		case "SSLMode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("SSLMode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SSLMode = data
+		case "timezone":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timezone"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timezone = data
 		}
 	}
 
@@ -9198,6 +9282,14 @@ func (ec *executionContext) marshalOModelDeployment2ᚖgithubᚗcomᚋencoderᚑ
 		return graphql.Null
 	}
 	return ec._ModelDeployment(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOPostgresInput2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐPostgresInput(ctx context.Context, v interface{}) (*model.PostgresInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputPostgresInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalORepositoryEmbeddings2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐRepositoryEmbeddings(ctx context.Context, sel ast.SelectionSet, v *model.RepositoryEmbeddings) graphql.Marshaler {

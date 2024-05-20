@@ -13,16 +13,22 @@ import (
 
 	"github.com/RediSearch/redisearch-go/v2/redisearch"
 	v1alpha1 "github.com/encoder-run/operator/api/cloud/v1alpha1"
+	postgrescache "github.com/encoder-run/operator/pkg/cache/postgres"
 	rediscache "github.com/encoder-run/operator/pkg/cache/redis"
+	"github.com/encoder-run/operator/pkg/database"
 	"github.com/encoder-run/operator/pkg/embedder"
 	"github.com/go-git/go-git/v5" // with go modules enabled (GO111MODULE=on or outside GOPATH)
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	githttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/go-git/go-git/v5/storage"
 	redigoredis "github.com/gomodule/redigo/redis"
+	"github.com/pgvector/pgvector-go"
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -95,6 +101,7 @@ func main() {
 	var storer storage.Storer
 	var redisearchClient *redisearch.Client
 	var redisClient *redis.Client
+	var db *gorm.DB
 	switch st.Spec.Type {
 	case v1alpha1.StorageTypeRedis:
 		// Get the go-git storage storer based on the storage type
@@ -109,6 +116,14 @@ func main() {
 		if err != nil {
 			CheckIfError(err)
 		}
+	case v1alpha1.StorageTypePostgres:
+		// Get the go-git storage storer based on the storage type
+		s, dbClient, err := postgresStorageStorer(c, st, url)
+		if err != nil {
+			CheckIfError(err)
+		}
+		db = dbClient
+		storer = s
 	default:
 		CheckIfError(fmt.Errorf("unsupported storage type: %s", st.Spec.Type))
 	}
@@ -122,9 +137,10 @@ func main() {
 	if err != nil {
 		if err == git.ErrRepositoryNotExists {
 			r, err = git.Clone(storer, nil, &git.CloneOptions{
-				URL:  fmt.Sprintf("https://%s", url),
-				Auth: auth,
+				URL:           fmt.Sprintf("https://%s", url),
+				Auth:          auth,
 				ReferenceName: plumbing.NewBranchReferenceName(branch),
+				Depth:         1,
 				SingleBranch:  true,
 			})
 			CheckIfError(err)
@@ -151,13 +167,14 @@ func main() {
 
 	// Manually update local branch reference to match the remote tracking branch
 	// Typically in a bare repo, this might be done in response to a push or a hook
-	remoteRef, err := r.Reference(plumbing.NewRemoteReferenceName("origin", branch), false)
+	remoteRef, err := r.Reference(plumbing.NewRemoteReferenceName("origin", branch), true)
 	CheckIfError(err)
+	fmt.Printf("Remote Ref: %v\n", remoteRef)
 
-	// Update local main directly to point to the same commit
-	localRef := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branch), remoteRef.Hash())
-	err = r.Storer.SetReference(localRef)
-	CheckIfError(err)
+	// // Update local main directly to point to the same commit
+	// localRef := plumbing.NewHashReference(plumbing.NewBranchReferenceName(branch), remoteRef.Hash())
+	// err = r.Storer.SetReference(localRef)
+	// CheckIfError(err)
 
 	commit, err := r.CommitObject(remoteRef.Hash())
 	if err != nil {
@@ -169,6 +186,108 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Switch based on the db type
+	switch st.Spec.Type {
+	case v1alpha1.StorageTypeRedis:
+		processRedisEmbeddings(embClient, tree, redisClient, redisearchClient, url)
+	case v1alpha1.StorageTypePostgres:
+		processPostgresEmbeddings(embClient, tree, db, url)
+	default:
+		CheckIfError(fmt.Errorf("unsupported storage type: %s", st.Spec.Type))
+	}
+}
+
+func processPostgresEmbeddings(embClient *embedder.EmbeddingClient, tree *object.Tree, db *gorm.DB, url string) {
+	// Check for existing processed hashes
+	existingHashes := make(map[string]bool)
+	// List all rows in the codeembedding table given the url
+	var embeddings []database.CodeEmbedding
+	if err := db.Where("url = ?", url).Find(&embeddings).Error; err != nil {
+		log.Fatalf("failed to query existing embeddings: %v", err)
+	}
+
+	// Create a set of unique hashes
+	for _, embedding := range embeddings {
+		existingHashes[fmt.Sprintf("%s.%s", embedding.FileHash, embedding.FilePath)] = true
+	}
+
+	hashes := make(map[string]bool)
+	filesBatch := []embedder.CodeEmbeddingRequest{}
+	treeIter := tree.Files()
+	batchSize := 10
+	count := 0
+
+	for {
+		file, err := treeIter.Next()
+		if err != nil {
+			if err == io.EOF {
+				break // No more files
+			}
+			log.Fatal(err)
+		}
+
+		hashes[fmt.Sprintf("%s.%s", file.Hash.String(), file.Name)] = true
+
+		if !existingHashes[fmt.Sprintf("%s.%s", file.Hash.String(), file.Name)] {
+			content, err := file.Contents()
+			if err != nil {
+				log.Fatal(err)
+			}
+			filesBatch = append(filesBatch, embedder.CodeEmbeddingRequest{
+				Path:    file.Name,
+				Content: content,
+				Hash:    file.Hash.String(),
+			})
+			count++
+
+			if count >= batchSize {
+				processAndSaveEmbeddings(embClient, db, &filesBatch, url) // process embeddings
+				filesBatch = []embedder.CodeEmbeddingRequest{}            // Reset the batch
+				count = 0
+			}
+		} else {
+			fmt.Printf("Skipping file '%s' since its hash is already processed\n", file.Name)
+		}
+	}
+
+	if len(filesBatch) > 0 {
+		processAndSaveEmbeddings(embClient, db, &filesBatch, url) // Process any remaining files
+	}
+}
+
+func processAndSaveEmbeddings(embClient *embedder.EmbeddingClient, db *gorm.DB, filesBatch *[]embedder.CodeEmbeddingRequest, url string) {
+	fmt.Printf("Processing batch of files\n")
+	embeddings, err := embClient.FetchEmbeddings(*filesBatch)
+	if err != nil {
+		log.Fatal(err)
+	}
+	for filePath, embs := range embeddings.Results {
+		for _, emb := range embs.Embeddings {
+			newEmb := database.CodeEmbedding{
+				URL:        url,
+				FileHash:   emb.FileHash,
+				FilePath:   filePath,
+				ChunkID:    emb.ChunkID,
+				StartIndex: emb.StartIndex,
+				EndIndex:   emb.EndIndex,
+				Embedding:  pgvector.NewVector(emb.Embedding), // Assuming emb.Vector is the appropriate data structure
+			}
+			// Upsert operation using Clauses with ON CONFLICT
+			if err := db.Clauses(clause.OnConflict{
+				Columns: []clause.Column{{Name: "chunk_id"}, {Name: "file_hash"}, {Name: "url"}, {Name: "file_path"}}, // Columns part of the unique constraint
+				DoUpdates: clause.Assignments(map[string]interface{}{ // Update these fields if there is a conflict
+					"start_index": newEmb.StartIndex,
+					"end_index":   newEmb.EndIndex,
+					"embedding":   newEmb.Embedding,
+				}),
+			}).Create(&newEmb).Error; err != nil {
+				log.Fatalf("failed to save or update embedding: %v", err)
+			}
+		}
+	}
+}
+
+func processRedisEmbeddings(embClient *embedder.EmbeddingClient, tree *object.Tree, redisClient *redis.Client, redisearchClient *redisearch.Client, url string) {
 	// Check for existing processed hashes
 	existingHashes := make(map[string]bool)
 	existingTreeHash, err := redisClient.Get(context.Background(), fmt.Sprintf("%s:embedding:tree", url)).Result()
@@ -285,6 +404,68 @@ func gitAuth(c client.Client, r *v1alpha1.Repository) (githttp.AuthMethod, error
 	default:
 		return nil, fmt.Errorf("unsupported repository type: %s", r.Spec.Type)
 	}
+}
+
+func postgresStorageStorer(c client.Client, s *v1alpha1.Storage, nsPrefix string) (storage.Storer, *gorm.DB, error) {
+	// get the password from the postgres secret
+	secret := &corev1.Secret{}
+	if err := c.Get(context.TODO(), client.ObjectKey{Name: s.Name, Namespace: s.Namespace}, secret); err != nil {
+		return nil, nil, err
+	}
+
+	hostBytes, ok := secret.Data["host"]
+	if !ok {
+		return nil, nil, errors.New("host not found in secret")
+	}
+	host := string(hostBytes)
+
+	usernameBytes, ok := secret.Data["username"]
+	if !ok {
+		return nil, nil, errors.New("username not found in secret")
+	}
+	username := string(usernameBytes)
+
+	passwordBytes, ok := secret.Data["password"]
+	if !ok {
+		return nil, nil, errors.New("password not found in secret")
+	}
+	password := string(passwordBytes)
+
+	databaseBytes, ok := secret.Data["database"]
+	if !ok {
+		return nil, nil, errors.New("database not found in secret")
+	}
+	db := string(databaseBytes)
+
+	portBytes, ok := secret.Data["port"]
+	if !ok {
+		return nil, nil, errors.New("port not found in secret")
+	}
+	port := string(portBytes)
+
+	sslModeBytes, ok := secret.Data["ssl_mode"]
+	if !ok {
+		return nil, nil, errors.New("ssl_mode not found in secret")
+	}
+	sslMode := string(sslModeBytes)
+
+	timezoneBytes, ok := secret.Data["timezone"]
+	if !ok {
+		return nil, nil, errors.New("timezone not found in secret")
+	}
+	timezone := string(timezoneBytes)
+
+	// Construct the DSN
+
+	dsn := database.ConstructPostgresDSN(host, username, password, db, port, sslMode, timezone)
+
+	dbClient, err := database.GetPostgresClient(dsn)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// New postgres storage
+	return postgrescache.NewStorage(dbClient, nsPrefix), dbClient, nil
 }
 
 func redisStorageStorer(c client.Client, s *v1alpha1.Storage, nsPrefix string) (storage.Storer, *redis.Options, error) {

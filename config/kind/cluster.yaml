@@ -22,6 +22,9 @@ nodes:
   - containerPort: 32081
     hostPort: 32081
     protocol: TCP
+  - containerPort: 5432
+    hostPort: 5432
+    protocol: TCP
   extraMounts:
   - hostPath: /tmp/encoder-run
     containerPath: /encoder-run

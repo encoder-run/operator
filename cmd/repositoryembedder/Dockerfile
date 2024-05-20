@@ -15,6 +15,7 @@ COPY cmd/repositoryembedder/ .
 COPY pkg/common/ pkg/common/
 COPY pkg/cache/ pkg/cache/
 COPY pkg/embedder/ pkg/embedder/
+COPY pkg/database/ pkg/database/
 COPY api/ api/
 
 # Build the Go app

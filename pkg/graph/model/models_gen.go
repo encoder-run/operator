@@ -52,8 +52,9 @@ type AddStorageDeploymentInput struct {
 }
 
 type AddStorageInput struct {
-	Type StorageType `json:"type"`
-	Name string      `json:"name"`
+	Type     StorageType    `json:"type"`
+	Name     string         `json:"name"`
+	Postgres *PostgresInput `json:"postgres,omitempty"`
 }
 
 type HuggingFace struct {
@@ -98,6 +99,17 @@ type Pipeline struct {
 type PipelineExecution struct {
 	ID     string                  `json:"id"`
 	Status PipelineExecutionStatus `json:"status"`
+}
+
+type PostgresInput struct {
+	External bool   `json:"external"`
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Database string `json:"database"`
+	SSLMode  string `json:"SSLMode"`
+	Timezone string `json:"timezone"`
 }
 
 type Query struct {

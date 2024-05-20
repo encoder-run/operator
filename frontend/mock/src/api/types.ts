@@ -59,6 +59,7 @@ export type AddStorageDeploymentInput = {
 
 export type AddStorageInput = {
   name: Scalars['String']['input'];
+  postgres?: InputMaybe<PostgresInput>;
   type: StorageType;
 };
 
@@ -208,6 +209,17 @@ export enum PipelineStatus {
 export enum PipelineType {
   RepositoryEmbeddings = 'REPOSITORY_EMBEDDINGS'
 }
+
+export type PostgresInput = {
+  dbname: Scalars['String']['input'];
+  external: Scalars['Boolean']['input'];
+  host: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  port: Scalars['Int']['input'];
+  sslmode: Scalars['String']['input'];
+  timezone: Scalars['String']['input'];
+  user: Scalars['String']['input'];
+};
 
 export type Query = {
   __typename?: 'Query';

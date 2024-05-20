@@ -1,5 +1,4 @@
 import { gql } from '@apollo/client';
-import * as React from 'react';
 import * as Apollo from '@apollo/client';
 import * as ApolloReactComponents from '@apollo/client/react/components';
 export type Maybe<T> = T | null;
@@ -65,6 +64,7 @@ export type AddStorageDeploymentInput = {
 
 export type AddStorageInput = {
   name: Scalars['String']['input'];
+  postgres?: InputMaybe<PostgresInput>;
   type: StorageType;
 };
 
@@ -214,6 +214,17 @@ export enum PipelineStatus {
 export enum PipelineType {
   RepositoryEmbeddings = 'REPOSITORY_EMBEDDINGS'
 }
+
+export type PostgresInput = {
+  SSLMode: Scalars['String']['input'];
+  database: Scalars['String']['input'];
+  external: Scalars['Boolean']['input'];
+  host: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  port: Scalars['Int']['input'];
+  timezone: Scalars['String']['input'];
+  username: Scalars['String']['input'];
+};
 
 export type Query = {
   __typename?: 'Query';

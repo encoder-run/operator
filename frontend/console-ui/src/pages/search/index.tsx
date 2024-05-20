@@ -38,6 +38,7 @@ export default function CodeSearchPage() {
     };
 
     const handleSearch = () => {
+        setCodeChunks([]); // Clear existing chunks before fetching new ones
         search({
             variables: {
                 query: {
@@ -78,8 +79,9 @@ export default function CodeSearchPage() {
             <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
                 {codeChunks.map((result) => {
                     const { content, startLine } = processContent(result.content, result.startLine);
+                    const uniqueKey = `${result.owner}-${result.repo}-${result.path}-${result.hash}-${result.chunkID}`;
                     return (
-                        <React.Fragment key={result.id}>
+                        <React.Fragment key={uniqueKey}>
                             <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                                 <Typography variant="subtitle1">
                                     {`${result.owner}/${result.repo} - ${result.path}`}

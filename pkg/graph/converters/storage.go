@@ -5,6 +5,7 @@ import (
 
 	"github.com/encoder-run/operator/api/cloud/v1alpha1"
 	"github.com/encoder-run/operator/pkg/graph/model"
+	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -78,5 +79,33 @@ func StorageInputToCRD(input model.AddStorageInput) (*v1alpha1.Storage, error) {
 	storageCRD.Spec.Type = storageType
 	storageCRD.Spec.Name = input.Name
 
+	if storageType == v1alpha1.StorageTypePostgres {
+		if input.Postgres == nil {
+			return nil, fmt.Errorf("postgres spec is required for storage type: %s", input.Type)
+		}
+		storageCRD.Spec.Postgres = &v1alpha1.PostgresSpec{
+			External: input.Postgres.External,
+		}
+	}
+
 	return storageCRD, nil
+}
+
+func PostgresSecretInputToCRD(storageCRD *v1alpha1.Storage, input *model.PostgresInput) (*corev1.Secret, error) {
+	secretCRD := &corev1.Secret{
+		ObjectMeta: v1.ObjectMeta{
+			Name:      storageCRD.Name,
+			Namespace: storageCRD.Namespace,
+		},
+	}
+	secretCRD.StringData = map[string]string{
+		"host":     input.Host,
+		"port":     fmt.Sprintf("%d", input.Port),
+		"database": input.Database,
+		"username": input.Username,
+		"password": input.Password,
+		"ssl_mode": input.SSLMode,
+		"timezone": input.Timezone,
+	}
+	return secretCRD, nil
 }

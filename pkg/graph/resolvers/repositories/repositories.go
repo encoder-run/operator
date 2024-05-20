@@ -127,9 +127,9 @@ func add(ctx context.Context, c client.Client, input *model.AddRepositoryInput) 
 			Spec: v1alpha1.RepositorySpec{
 				Type: v1alpha1.RepositoryTypeGithub,
 				Github: &v1alpha1.GithubRepositorySpec{
-					URL:   url,
-					Owner: *input.Owner,
-					Name:  *input.Name,
+					URL:    url,
+					Owner:  *input.Owner,
+					Name:   *input.Name,
 					Branch: *input.Branch,
 				},
 			},

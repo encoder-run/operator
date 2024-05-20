@@ -78,6 +78,20 @@ func Add(ctx context.Context, input model.AddStorageInput) (*model.Storage, erro
 		return nil, err
 	}
 
+	// If its an external postgres storage, then we need to save the config in a secret.
+	if storageCRD.Spec.Type == v1alpha1.StorageTypePostgres && storageCRD.Spec.Postgres.External {
+		// Create the secret.
+		secretCRD, err := converters.PostgresSecretInputToCRD(storageCRD, input.Postgres)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create the secret.
+		if err := ctrlClient.Create(ctx, secretCRD); err != nil {
+			return nil, err
+		}
+	}
+
 	// Convert the storage to the model.
 	s, err := converters.StorageCRDToModel(storageCRD)
 	if err != nil {

@@ -4,7 +4,7 @@ metadata:
   name: model-default
 spec:
   deployment:
-    cpu: "2"
+    cpu: "4"
     enabled: true
     memory: 16G
   huggingface:

@@ -3,9 +3,7 @@ package rediscache
 
 import (
 	"fmt"
-	"time"
 
-	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/redis/go-redis/v9"
 	"golang.org/x/net/context"
 )
@@ -63,15 +61,6 @@ func NewStorage(redisOptions *redis.Options, ns string) *Storage {
 }
 
 var errNotSupported = fmt.Errorf("not supported")
-
-func (o *ObjectStorage) ObjectPacks() ([]plumbing.Hash, error) {
-	fmt.Printf("ObjectPacks")
-	return nil, nil
-}
-func (o *ObjectStorage) DeleteOldObjectPackAndIndex(plumbing.Hash, time.Time) error {
-	print("DeleteOldObjectPackAndIndex")
-	return nil
-}
 
 // AddAlternate implements storage.Storer.
 func (s *Storage) AddAlternate(remote string) error {

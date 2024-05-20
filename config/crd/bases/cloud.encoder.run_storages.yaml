@@ -64,6 +64,16 @@ spec:
               name:
                 description: Name of the storage
                 type: string
+              postgres:
+                description: Postgres spec
+                properties:
+                  external:
+                    description: External is a flag to indicate if the Postgres instance
+                      is external
+                    type: boolean
+                required:
+                - external
+                type: object
               type:
                 description: Type of storage
                 type: string

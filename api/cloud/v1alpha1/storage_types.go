@@ -53,12 +53,21 @@ type StorageDeploymentSpec struct {
 	Memory  resource.Quantity `json:"memory"`
 }
 
+// PostgresSpec defines the spec for Postgres storage
+type PostgresSpec struct {
+	// External is a flag to indicate if the Postgres instance is external
+	External bool `json:"external"`
+}
+
 // StorageSpec defines the desired state of Storage
 type StorageSpec struct {
 	// Type of storage
 	Type StorageType `json:"type"`
 	// Name of the storage
 	Name string `json:"name"`
+
+	// Postgres spec
+	Postgres *PostgresSpec `json:"postgres,omitempty"`
 
 	// Deployment spec
 	Deployment *StorageDeploymentSpec `json:"deployment,omitempty"`

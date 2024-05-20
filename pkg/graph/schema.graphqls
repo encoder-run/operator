@@ -174,9 +174,21 @@ input AddModelDeploymentInput {
   memory: String!
 }
 
+input PostgresInput {
+  external: Boolean!
+  host: String!
+  port: Int!
+  username: String!
+  password: String!
+  database: String!
+  SSLMode: String!
+  timezone: String!
+}
+
 input AddStorageInput {
   type: StorageType!
   name: String!
+  postgres: PostgresInput
 }
 
 input AddStorageDeploymentInput {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Select, MenuItem, InputLabel, FormControl } from '@mui/material';
-import { StorageType, useAddStorageMutation } from '../../api/types'; // Adjust the import according to your API file structure
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Select, MenuItem, InputLabel, FormControl, FormGroup, FormControlLabel, Switch } from '@mui/material';
+import { PostgresInput, StorageType, useAddStorageMutation } from '../../api/types'; // Adjust the import according to your API file structure
 
 interface AddStorageDialogProps {
     open: boolean;
@@ -13,6 +13,23 @@ const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialo
     const [type, setType] = useState<StorageType | null>();
     const [name, setName] = useState('');
     const [addStorage, { data, loading, error }] = useAddStorageMutation();
+    const [postgresConfig, setPostgresConfig] = useState<PostgresInput>({
+        external: true,
+        host: '',
+        port: 5432,
+        username: '',
+        password: '',
+        database: '',
+        SSLMode: 'disable',
+        timezone: 'America/Los_Angeles'
+    });
+
+    const handlePostgresConfigChange = (prop: any) => (event: any) => {
+        setPostgresConfig({
+            ...postgresConfig,
+            [prop]: event.target.value
+        });
+    };
 
     const handleSubmit = () => {
         if (!type || !name) {
@@ -21,6 +38,7 @@ const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialo
         const input = {
             type,
             name,
+            ...(type === 'POSTGRES' && { postgres: { ...postgresConfig } })
         };
         addStorage({
             variables: {
@@ -39,6 +57,16 @@ const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialo
         if (!open) {
             setType(null);
             setName('');
+            setPostgresConfig({
+                external: true,
+                host: '',
+                username: '',
+                password: '',
+                database: '',
+                port: 5432,
+                SSLMode: 'disable',
+                timezone: 'America/Los_Angeles'
+            });
         }
     }, [open]);
 
@@ -50,7 +78,7 @@ const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialo
                     <InputLabel id="type-label">Type</InputLabel>
                     <Select
                         labelId="type-label"
-                        value={type}
+                        value={type || ''}
                         label="Type"
                         onChange={(e) => setType(e.target.value as StorageType)}
                     >
@@ -68,6 +96,67 @@ const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialo
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                 />
+                {type === 'POSTGRES' && (
+                    <>
+                        <FormGroup>
+                            <FormControlLabel control={<Switch disabled defaultChecked />} label="External" />
+                        </FormGroup>
+                        <TextField
+                            margin="dense"
+                            label="Host"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={postgresConfig.host}
+                            onChange={handlePostgresConfigChange('host')}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Port"
+                            type="number"
+                            fullWidth
+                            variant="outlined"
+                            value={postgresConfig.port}
+                            onChange={handlePostgresConfigChange('port')}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Username"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={postgresConfig.username}
+                            onChange={handlePostgresConfigChange('username')}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Password"
+                            type="password"
+                            fullWidth
+                            variant="outlined"
+                            value={postgresConfig.password}
+                            onChange={handlePostgresConfigChange('password')}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="Database"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={postgresConfig.database}
+                            onChange={handlePostgresConfigChange('database')}
+                        />
+                        <TextField
+                            margin="dense"
+                            label="SSL Mode"
+                            type="text"
+                            fullWidth
+                            variant="outlined"
+                            value={postgresConfig.SSLMode}
+                            onChange={handlePostgresConfigChange('SSLMode')}
+                        />
+                    </>
+                )}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Cancel</Button>
