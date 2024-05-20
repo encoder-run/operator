@@ -163,11 +163,11 @@ else
 	make install
 	$(CMCTL) x install --set prometheus.enabled=false
 	$(KUSTOMIZE) build config/kserve | $(KUBECTL) apply -f -
-	kind load docker-image $(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION) --name=$(CLUSTER_NAME)
-	kind load docker-image $(GATEWAY_IMG):$(GATEWAY_IMG_VERSION) --name=$(CLUSTER_NAME)
-	kind load docker-image $(CONSOLE_UI_IMG):$(CONSOLE_UI_IMG_VERSION) --name=$(CLUSTER_NAME)
-	kind load docker-image $(MODELDEPLOYER_IMG):$(MODELDEPLOYER_IMG_VERSION) --name=$(CLUSTER_NAME)
-	kind load docker-image $(REPOSITORY_EMBEDDER_IMG):$(REPOSITORY_EMBEDDER_IMG_VERSION) --name=$(CLUSTER_NAME)
+	$(LOCALBIN)/kind load docker-image $(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION) --name=$(CLUSTER_NAME)
+	$(LOCALBIN)/kind load docker-image $(GATEWAY_IMG):$(GATEWAY_IMG_VERSION) --name=$(CLUSTER_NAME)
+	$(LOCALBIN)/kind load docker-image $(CONSOLE_UI_IMG):$(CONSOLE_UI_IMG_VERSION) --name=$(CLUSTER_NAME)
+	$(LOCALBIN)/kind load docker-image $(MODELDEPLOYER_IMG):$(MODELDEPLOYER_IMG_VERSION) --name=$(CLUSTER_NAME)
+	$(LOCALBIN)/kind load docker-image $(REPOSITORY_EMBEDDER_IMG):$(REPOSITORY_EMBEDDER_IMG_VERSION) --name=$(CLUSTER_NAME)
 	cd config/manager && $(KUSTOMIZE) edit set image controller=$(CONTROLLER_MANAGER_IMG):$(CONTROLLER_MANAGER_IMG_VERSION)
 	$(KUSTOMIZE) build config/default | $(KUBECTL) apply -f -
 	make default-admin
@@ -244,7 +244,7 @@ cert-manager-install: ## Install cert-manager
 
 .PHONY: kind
 kind: # Create a kind cluster
-	kind create cluster --config=config/kind/cluster.yaml
+	$(LOCALBIN)/kind create cluster --config=config/kind/cluster.yaml
 	kubectl apply -f config/kind/ingress-nginx.yaml
 
 .PHONY: kind-install
@@ -264,7 +264,7 @@ kind-install: # Install the controller in the kind cluster
 
 .PHONY: kind-delete
 kind-delete: # Delete the kind cluster
-	kind delete cluster --name $(CLUSTER_NAME)
+	$(LOCALBIN)/kind delete cluster --name $(CLUSTER_NAME)
 
 .PHONY: default-admin
 default-admin: # Create a default admin user
