@@ -55,6 +55,14 @@ export default function CodeSearchPage() {
         });
     }
 
+    const handleKeyDown = (event: any) => {
+        // Check if the pressed key is "Enter" and that the input isn't empty or just whitespace
+        if (event.key === 'Enter' && searchQuery.trim() !== '') {
+            event.preventDefault(); // Prevent the default action to avoid form submission or newline insertion
+            handleSearch();
+        }
+    };
+
     return (
         <Box sx={{ p: 2, display: "flex", flexDirection: "column", height: "100%" }}>
             <Typography variant="h4" sx={{ mb: 2 }}>Search</Typography>
@@ -88,6 +96,7 @@ export default function CodeSearchPage() {
                                 </Typography>
                                 <SyntaxHighlighter
                                     language={getLanguage(result.path)}
+                                    onKeyDown={handleKeyDown}
                                     style={materialLight}
                                     showLineNumbers
                                     wrapLines
