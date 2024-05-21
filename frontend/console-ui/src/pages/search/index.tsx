@@ -72,6 +72,7 @@ export default function CodeSearchPage() {
                     label="Query"
                     variant="outlined"
                     value={searchQuery}
+                    onKeyDown={handleKeyDown}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     sx={{ mb: 2 }}
                 />
@@ -96,7 +97,6 @@ export default function CodeSearchPage() {
                                 </Typography>
                                 <SyntaxHighlighter
                                     language={getLanguage(result.path)}
-                                    onKeyDown={handleKeyDown}
                                     style={materialLight}
                                     showLineNumbers
                                     wrapLines
