@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Box, TextField, List, ListItem, Divider, Typography, Button, Paper } from '@mui/material';
+import { Box, TextField, List, Typography, Button, Paper } from '@mui/material';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { materialLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
-import { SearchResult, useSemanticSearchLazyQuery, useSemanticSearchQuery } from '../../api/types';
+import { SearchResult, useSemanticSearchLazyQuery } from '../../api/types';
 
 // Helper to get language from file path
 const getLanguage = (path: string) => {
@@ -30,14 +30,15 @@ const processContent = (content: string, startLine: number) => {
 export default function CodeSearchPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [codeChunks, setCodeChunks] = useState<SearchResult[]>([]);
-    const [expandedId, setExpandedId] = useState(null);
+    const [expandedId, setExpandedId] = useState<string | null>(null);
     const [search, { data, loading, error }] = useSemanticSearchLazyQuery();
 
-    const toggleExpand = (id: any) => {
+    const toggleExpand = (id: string) => {
         setExpandedId(expandedId === id ? null : id);
     };
 
-    const handleSearch = () => {
+    const handleSearch = (event?: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLDivElement>) => {
+        if (event) event.preventDefault(); // Prevent default behavior if called from form submit or key press
         setCodeChunks([]); // Clear existing chunks before fetching new ones
         search({
             variables: {
@@ -55,22 +56,33 @@ export default function CodeSearchPage() {
         });
     }
 
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter') {
+            handleSearch(event);
+        }
+    };
+
     return (
         <Box sx={{ p: 2, display: "flex", flexDirection: "column", height: "100%" }}>
             <Typography variant="h4" sx={{ mb: 2 }}>Search</Typography>
-            <Box sx={{ display: "flex" }}>
+            <Box
+                component="form"
+                onSubmit={handleSearch}
+                sx={{ display: "flex" }}
+            >
                 <TextField
                     fullWidth
                     label="Query"
                     variant="outlined"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={handleKeyPress}
                     sx={{ mb: 2 }}
                 />
                 <Button
+                    type="submit"
                     variant="contained"
                     color="primary"
-                    onClick={handleSearch}
                     sx={{ mb: 2, ml: 2 }}
                 >
                     Search

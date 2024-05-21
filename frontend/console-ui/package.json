@@ -22,7 +22,6 @@
     "@types/node": "^16.18.94",
     "@types/react": "^18.2.74",
     "@types/react-dom": "^18.2.24",
-    "concurrently": "^8.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
@@ -59,6 +58,7 @@
     ]
   },
   "devDependencies": {
-    "@types/react-syntax-highlighter": "^15.5.11"
+    "@types/react-syntax-highlighter": "^15.5.11",
+    "concurrently": "^8.2.2"
   }
 }
