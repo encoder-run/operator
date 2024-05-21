@@ -3,7 +3,7 @@ import { AddStorageDeploymentInput, Storage, StorageStatus, StorageType } from "
 
 let storages: Storage[] = [
     {
-        id: '1',
+        id: '10',
         type: StorageType.Redis,
         name: 'Redis-dev',
         status: StorageStatus.Ready,
