@@ -49,16 +49,6 @@ export default function Sidebar() {
                     <Divider sx={{ my: 1 }} />
                     <List>
                         <ListItem disablePadding>
-                            <ListItemButton component={Link} to="/api">
-                                <Box
-                                    width={24}
-                                    height={24}>
-                                    <WrenchIcon />
-                                </Box>
-                                <ListItemText sx={{ p: 1 }} primary="API" />
-                            </ListItemButton>
-                        </ListItem>
-                        <ListItem disablePadding>
                             <ListItemButton component={Link} to="/pipelines">
                                 <Box
                                     width={24}

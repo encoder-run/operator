@@ -22,10 +22,6 @@ export const router = createBrowserRouter([
                 element: <CodeSearchPage />,
             },
             {
-                path: "api",
-                element: <></>,
-            },
-            {
                 path: "pipelines",
                 element: <PipelinesPage />,
             },
