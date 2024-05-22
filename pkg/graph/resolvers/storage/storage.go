@@ -3,9 +3,11 @@ package storage
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/encoder-run/operator/api/cloud/v1alpha1"
 	"github.com/encoder-run/operator/pkg/common"
+	"github.com/encoder-run/operator/pkg/database"
 	"github.com/encoder-run/operator/pkg/graph/converters"
 	"github.com/encoder-run/operator/pkg/graph/model"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -71,6 +73,25 @@ func Add(ctx context.Context, input model.AddStorageInput) (*model.Storage, erro
 	storageCRD, err := converters.StorageInputToCRD(input)
 	if err != nil {
 		return nil, err
+	}
+
+	// If it's an external Postgres storage, validate the connection.
+	if storageCRD.Spec.Type == v1alpha1.StorageTypePostgres && storageCRD.Spec.Postgres.External {
+		dsn := database.ConstructPostgresDSN(
+			input.Postgres.Host,
+			input.Postgres.Username,
+			input.Postgres.Password,
+			input.Postgres.Database,
+			strconv.Itoa(input.Postgres.Port),
+			input.Postgres.SSLMode,
+			input.Postgres.Timezone,
+		)
+
+		// Getting the Postgres client will validate the connection.
+		_, err := database.GetPostgresClient(dsn)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Create the storage.
