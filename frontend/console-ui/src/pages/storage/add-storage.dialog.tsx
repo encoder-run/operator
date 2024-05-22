@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField, Button, Select, MenuItem, InputLabel, FormControl, FormGroup, FormControlLabel, Switch } from '@mui/material';
 import { PostgresInput, StorageType, useAddStorageMutation } from '../../api/types'; // Adjust the import according to your API file structure
+import toast from 'react-hot-toast';
+
 
 interface AddStorageDialogProps {
     open: boolean;
@@ -50,9 +52,13 @@ const AddStorageDialog = ({ open, onClose, onSuccess, refetch }: AddStorageDialo
             if (resp.data?.addStorage?.id) {
                 onSuccess(resp.data.addStorage.id);
             }
+        }).catch((error) => {
+            toast.error('Unable to connect to Postgres. Check Configurations', {
+                position: "top-center"
+              });
         });
     };
-
+   
     useEffect(() => {
         if (!open) {
             setType(null);
