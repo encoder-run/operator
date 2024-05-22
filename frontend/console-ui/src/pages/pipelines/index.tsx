@@ -44,7 +44,7 @@ export default function PipelinesPage() {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            if (fetchCount < 10) {
+            if (fetchCount < 30) {
                 refetch();
                 setFetchCount(fetchCount + 1);
             } else {

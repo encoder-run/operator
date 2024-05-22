@@ -223,6 +223,8 @@ type Mutation {
   addStorageDeployment(input: AddStorageDeploymentInput!): Storage!
   deleteStorage(id: ID!): Storage!
   addPipeline(input: AddPipelineInput!): Pipeline!
+  # Rename this to enablePipeline
   addPipelineDeployment(input: AddPipelineDeploymentInput!): Pipeline!
+  triggerPipeline(id: ID!): PipelineExecution!
   deletePipeline(id: ID!): Pipeline!
 }

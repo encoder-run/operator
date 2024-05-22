@@ -17,7 +17,7 @@ let pipelines: Pipeline[] = [
     {
         id: '2',
         name: 'pipeline-2',
-        enabled: true,
+        enabled: false,
         type: PipelineType.RepositoryEmbeddings,
         repositoryEmbeddings: {
             repositoryID: '2',
@@ -48,7 +48,7 @@ let pipelines: Pipeline[] = [
             modelID: '4',
             storageID: '4',
         },
-        status: PipelineStatus.NotDeployed,
+        status: PipelineStatus.Error,
     }
 ];
 
@@ -82,7 +82,7 @@ class PipelineApi {
             name: input.name,
             enabled: false,
             type: input.type,
-            status: PipelineStatus.NotDeployed,
+            status: PipelineStatus.Ready,
             repositoryEmbeddings: {
                 repositoryID: input.repositoryEmbeddings.repositoryID,
                 modelID: input.repositoryEmbeddings.modelID,
@@ -105,6 +105,24 @@ class PipelineApi {
 
 
         return pipeline;
+    }
+
+    trigger(id: any) {
+        // Find the pipeline
+        const pipeline = pipelines.find(pipeline => pipeline.id === id);
+        if (!pipeline) {
+            throw new Error('Pipeline not found');
+        }
+        // Add a new pipeline execution
+        const newExecution: PipelineExecution = {
+            id: String(pipelineExecutions.length + 1),
+            status: PipelineExecutionStatus.Pending,
+        };
+
+        pipelineExecutions.push(newExecution);
+
+        // Return the execution
+        return newExecution;
     }
 }
 

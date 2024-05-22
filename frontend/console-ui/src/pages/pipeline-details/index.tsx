@@ -14,7 +14,8 @@ import {
     IconButton
 } from '@mui/material';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
-import { useAddPipelineDeploymentMutation, useGetPipelineExecutionsQuery, useGetPipelineQuery } from '../../api/types'; // Ensure this is set up in your GraphQL API file
+import SyncIcon from '@mui/icons-material/Sync';
+import { useAddPipelineDeploymentMutation, useGetPipelineExecutionsQuery, useGetPipelineQuery, useTriggerPipelineMutation } from '../../api/types'; // Ensure this is set up in your GraphQL API file
 import toast from 'react-hot-toast';
 import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useEffect } from 'react';
@@ -27,6 +28,7 @@ export default function PipelineDetailsPage() {
     });
     const navigate = useNavigate();
     const [addDeployment, { loading: addDeploymentLoading }] = useAddPipelineDeploymentMutation();
+    const [triggerPipeline] = useTriggerPipelineMutation();
     const {
         data: executionsData,
         loading: executionsLoading,
@@ -100,6 +102,19 @@ export default function PipelineDetailsPage() {
 
     };
 
+    const handleTriggerPipeline = () => {
+        if (!pipelineId) return;
+        triggerPipeline({
+            variables: { id: pipelineId }
+        }).then(() => {
+            setTimeout(() => {
+                executionsRefetch();
+            }, 500);
+            toast.success('Pipeline triggered successfully');
+            console.log('Trigger pipeline logic here');
+        });
+    }
+
     if (loading) return <CircularProgress />;
     if (error) return <Typography>Error: {error.message}</Typography>;
 
@@ -143,7 +158,7 @@ export default function PipelineDetailsPage() {
                             startIcon={<PowerSettingsNewIcon />}
                             onClick={handleEnablePipeline}
                             variant="contained"
-                            color="success"
+                            color="primary"
                             disabled={data?.getPipeline.enabled}
                         >
                             Enable Pipeline
@@ -153,9 +168,21 @@ export default function PipelineDetailsPage() {
                     <Typography variant="body1"><strong>Enabled:</strong> {String(data?.getPipeline.enabled)}</Typography>
                 </Paper>
                 <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-                    <Typography variant="h5" gutterBottom>
-                        Pipeline Executions
-                    </Typography>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+
+                        <Typography variant="h5" gutterBottom>
+                            Pipeline Executions
+                        </Typography>
+                        <Button
+                            startIcon={<SyncIcon />}
+                            onClick={handleTriggerPipeline}
+                            variant="contained"
+                            color="primary"
+                            disabled={!data?.getPipeline.enabled}
+                        >
+                            Manual Trigger
+                        </Button>
+                    </Box>
                     <Divider sx={{ my: 2 }} />
                     <Box sx={{ height: 400, width: '100%' }}>
                         <DataGrid

@@ -79,3 +79,10 @@ mutation deletePipeline($id: ID!) {
         }
     }
 }
+
+mutation triggerPipeline($id: ID!) {
+    triggerPipeline(id: $id) {
+        id
+        status
+    }
+}

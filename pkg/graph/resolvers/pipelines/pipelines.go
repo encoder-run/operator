@@ -119,6 +119,52 @@ func AddDeployment(ctx context.Context, input model.AddPipelineDeploymentInput) 
 	return p, nil
 }
 
+func Trigger(ctx context.Context, id string) (*model.PipelineExecution, error) {
+	// Get the controller-runtime client from the context.
+	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)
+	if !ok {
+		return nil, fmt.Errorf("controller-runtime client not found in context")
+	}
+
+	// Get the pipeline.
+	pipelineCRD := &v1alpha1.Pipeline{}
+	if err := ctrlClient.Get(ctx, client.ObjectKey{Namespace: "default", Name: id}, pipelineCRD); err != nil {
+		return nil, err
+	}
+
+	// Create the pipeline execution.
+	executionCRD := &v1alpha1.PipelineExecution{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "pipeline-execution-",
+			Namespace:    "default",
+			Labels: map[string]string{
+				"pipelineId": id,
+			},
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(pipelineCRD, v1alpha1.GroupVersion.WithKind("Pipeline")),
+			},
+		},
+		Spec: v1alpha1.PipelineExecutionSpec{
+			PipelineRef: v1.ObjectReference{
+				Name:      id,
+				Namespace: "default",
+			},
+		},
+	}
+
+	if err := ctrlClient.Create(ctx, executionCRD); err != nil {
+		return nil, err
+	}
+
+	// Convert the pipeline execution to the model.
+	e, err := converters.PipelineExecutionCRDToModel(executionCRD)
+	if err != nil {
+		return nil, err
+	}
+
+	return e, nil
+}
+
 func List(ctx context.Context) ([]*model.Pipeline, error) {
 	// Get the controller-runtime client from the context.
 	ctrlClient, ok := ctx.Value(common.AdminClientKey).(client.Client)

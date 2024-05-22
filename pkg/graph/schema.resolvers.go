@@ -65,6 +65,11 @@ func (r *mutationResolver) AddPipelineDeployment(ctx context.Context, input mode
 	return pipelines.AddDeployment(ctx, input)
 }
 
+// TriggerPipeline is the resolver for the triggerPipeline field.
+func (r *mutationResolver) TriggerPipeline(ctx context.Context, id string) (*model.PipelineExecution, error) {
+	return pipelines.Trigger(ctx, id)
+}
+
 // DeletePipeline is the resolver for the deletePipeline field.
 func (r *mutationResolver) DeletePipeline(ctx context.Context, id string) (*model.Pipeline, error) {
 	return pipelines.Delete(ctx, id)

@@ -80,6 +80,7 @@ type ComplexityRoot struct {
 		DeletePipeline        func(childComplexity int, id string) int
 		DeleteRepository      func(childComplexity int, id string) int
 		DeleteStorage         func(childComplexity int, id string) int
+		TriggerPipeline       func(childComplexity int, id string) int
 	}
 
 	Pipeline struct {
@@ -164,6 +165,7 @@ type MutationResolver interface {
 	DeleteStorage(ctx context.Context, id string) (*model.Storage, error)
 	AddPipeline(ctx context.Context, input model.AddPipelineInput) (*model.Pipeline, error)
 	AddPipelineDeployment(ctx context.Context, input model.AddPipelineDeploymentInput) (*model.Pipeline, error)
+	TriggerPipeline(ctx context.Context, id string) (*model.PipelineExecution, error)
 	DeletePipeline(ctx context.Context, id string) (*model.Pipeline, error)
 }
 type QueryResolver interface {
@@ -413,6 +415,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.DeleteStorage(childComplexity, args["id"].(string)), true
+
+	case "Mutation.triggerPipeline":
+		if e.complexity.Mutation.TriggerPipeline == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_triggerPipeline_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.TriggerPipeline(childComplexity, args["id"].(string)), true
 
 	case "Pipeline.enabled":
 		if e.complexity.Pipeline.Enabled == nil {
@@ -1052,6 +1066,21 @@ func (ec *executionContext) field_Mutation_deleteRepository_args(ctx context.Con
 }
 
 func (ec *executionContext) field_Mutation_deleteStorage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_triggerPipeline_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 string
@@ -2425,6 +2454,67 @@ func (ec *executionContext) fieldContext_Mutation_addPipelineDeployment(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_addPipelineDeployment_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_triggerPipeline(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_triggerPipeline(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Mutation().TriggerPipeline(rctx, fc.Args["id"].(string))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.PipelineExecution)
+	fc.Result = res
+	return ec.marshalNPipelineExecution2ᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐPipelineExecution(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_triggerPipeline(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_PipelineExecution_id(ctx, field)
+			case "status":
+				return ec.fieldContext_PipelineExecution_status(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type PipelineExecution", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_triggerPipeline_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7386,6 +7476,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "triggerPipeline":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_triggerPipeline(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "deletePipeline":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deletePipeline(ctx, field)
@@ -8653,6 +8750,10 @@ func (ec *executionContext) marshalNPipeline2ᚖgithubᚗcomᚋencoderᚑrunᚋo
 		return graphql.Null
 	}
 	return ec._Pipeline(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNPipelineExecution2githubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐPipelineExecution(ctx context.Context, sel ast.SelectionSet, v model.PipelineExecution) graphql.Marshaler {
+	return ec._PipelineExecution(ctx, sel, &v)
 }
 
 func (ec *executionContext) marshalNPipelineExecution2ᚕᚖgithubᚗcomᚋencoderᚑrunᚋoperatorᚋpkgᚋgraphᚋmodelᚐPipelineExecutionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.PipelineExecution) graphql.Marshaler {

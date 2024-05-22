@@ -1,4 +1,5 @@
 import { gql } from '@apollo/client';
+import * as React from 'react';
 import * as Apollo from '@apollo/client';
 import * as ApolloReactComponents from '@apollo/client/react/components';
 export type Maybe<T> = T | null;
@@ -124,6 +125,7 @@ export type Mutation = {
   deletePipeline: Pipeline;
   deleteRepository: Repository;
   deleteStorage: Storage;
+  triggerPipeline: PipelineExecution;
 };
 
 
@@ -181,6 +183,11 @@ export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type MutationTriggerPipelineArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type Pipeline = {
   __typename?: 'Pipeline';
   enabled: Scalars['Boolean']['output'];
@@ -205,10 +212,9 @@ export enum PipelineExecutionStatus {
 }
 
 export enum PipelineStatus {
-  Deploying = 'DEPLOYING',
   Error = 'ERROR',
-  NotDeployed = 'NOT_DEPLOYED',
-  Ready = 'READY'
+  Ready = 'READY',
+  Running = 'RUNNING'
 }
 
 export enum PipelineType {
@@ -415,6 +421,13 @@ export type DeletePipelineMutationVariables = Exact<{
 
 
 export type DeletePipelineMutation = { __typename?: 'Mutation', deletePipeline: { __typename?: 'Pipeline', id: string, name: string, type: PipelineType, enabled: boolean, status: PipelineStatus, repositoryEmbeddings?: { __typename?: 'RepositoryEmbeddings', repositoryID: string, modelID: string, storageID: string } | null } };
+
+export type TriggerPipelineMutationVariables = Exact<{
+  id: Scalars['ID']['input'];
+}>;
+
+
+export type TriggerPipelineMutation = { __typename?: 'Mutation', triggerPipeline: { __typename?: 'PipelineExecution', id: string, status: PipelineExecutionStatus } };
 
 export type RepositoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1056,6 +1069,46 @@ export function useDeletePipelineMutation(baseOptions?: Apollo.MutationHookOptio
 export type DeletePipelineMutationHookResult = ReturnType<typeof useDeletePipelineMutation>;
 export type DeletePipelineMutationResult = Apollo.MutationResult<DeletePipelineMutation>;
 export type DeletePipelineMutationOptions = Apollo.BaseMutationOptions<DeletePipelineMutation, DeletePipelineMutationVariables>;
+export const TriggerPipelineDocument = gql`
+    mutation triggerPipeline($id: ID!) {
+  triggerPipeline(id: $id) {
+    id
+    status
+  }
+}
+    `;
+export type TriggerPipelineMutationFn = Apollo.MutationFunction<TriggerPipelineMutation, TriggerPipelineMutationVariables>;
+export type TriggerPipelineComponentProps = Omit<ApolloReactComponents.MutationComponentOptions<TriggerPipelineMutation, TriggerPipelineMutationVariables>, 'mutation'>;
+
+    export const TriggerPipelineComponent = (props: TriggerPipelineComponentProps) => (
+      <ApolloReactComponents.Mutation<TriggerPipelineMutation, TriggerPipelineMutationVariables> mutation={TriggerPipelineDocument} {...props} />
+    );
+    
+
+/**
+ * __useTriggerPipelineMutation__
+ *
+ * To run a mutation, you first call `useTriggerPipelineMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useTriggerPipelineMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [triggerPipelineMutation, { data, loading, error }] = useTriggerPipelineMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useTriggerPipelineMutation(baseOptions?: Apollo.MutationHookOptions<TriggerPipelineMutation, TriggerPipelineMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<TriggerPipelineMutation, TriggerPipelineMutationVariables>(TriggerPipelineDocument, options);
+      }
+export type TriggerPipelineMutationHookResult = ReturnType<typeof useTriggerPipelineMutation>;
+export type TriggerPipelineMutationResult = Apollo.MutationResult<TriggerPipelineMutation>;
+export type TriggerPipelineMutationOptions = Apollo.BaseMutationOptions<TriggerPipelineMutation, TriggerPipelineMutationVariables>;
 export const RepositoriesDocument = gql`
     query repositories {
   repositories {

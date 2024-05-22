@@ -83,6 +83,9 @@ const resolvers = {
         addPipelineDeployment: (parent, args, context, info) => {
             return pipelineApi.addDeployment(args.input);
         },
+        triggerPipeline: (parent, args, context, info) => {
+            return pipelineApi.trigger(args.id);
+        }
     },
   };
 

@@ -119,6 +119,7 @@ export type Mutation = {
   deletePipeline: Pipeline;
   deleteRepository: Repository;
   deleteStorage: Storage;
+  triggerPipeline: PipelineExecution;
 };
 
 
@@ -176,6 +177,11 @@ export type MutationDeleteStorageArgs = {
   id: Scalars['ID']['input'];
 };
 
+
+export type MutationTriggerPipelineArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type Pipeline = {
   __typename?: 'Pipeline';
   enabled: Scalars['Boolean']['output'];
@@ -200,10 +206,9 @@ export enum PipelineExecutionStatus {
 }
 
 export enum PipelineStatus {
-  Deploying = 'DEPLOYING',
   Error = 'ERROR',
-  NotDeployed = 'NOT_DEPLOYED',
-  Ready = 'READY'
+  Ready = 'READY',
+  Running = 'RUNNING'
 }
 
 export enum PipelineType {
