@@ -204,32 +204,52 @@ func (r *StorageReconciler) ensureDeploymentCleanup(ctx context.Context, storage
 // ensureStatus ensures that the status of the storage is updated based on the state of the inference service.
 func (r *StorageReconciler) ensureStatus(ctx context.Context, storage *v1alpha1.Storage) error {
 	log := log.FromContext(ctx)
-	// Get the deployment if it exists.
-	deployment := &v1.Deployment{}
-	if err := r.Get(ctx, client.ObjectKey{Name: storage.Name, Namespace: storage.Namespace}, deployment); err != nil {
-		if client.IgnoreNotFound(err) == nil {
-			return nil
-		}
-		return err
-	}
-
-	// Update the status to ready if the ready replicas are greater than 0 and the storage state is not equal to ready.
-	if deployment.Status.ReadyReplicas > 0 && storage.Status.State != nil && *storage.Status.State != v1alpha1.StorageStateReady {
-		// Update the status of the storage.
-		state := v1alpha1.StorageStateReady
-		storage.Status.State = &state
-		// Add condition to the storage.
-		storage.Status.Conditions = append(storage.Status.Conditions, metav1.Condition{
-			Type:               string(v1alpha1.StorageStateReady),
-			Status:             metav1.ConditionTrue,
-			Reason:             "DeploymentReady",
-			Message:            "Deployment is ready",
-			LastTransitionTime: metav1.Now(),
-		})
-		// Update the status of the storage.
-		log.Info("Storage is ready", "Storage.Namespace", storage.Namespace, "Storage.Name", storage.Name)
-		if err := r.Status().Update(ctx, storage); err != nil {
+	if storage.Spec.Deployment != nil && !storage.Spec.Deployment.Enabled {
+		// Get the deployment if it exists.
+		deployment := &v1.Deployment{}
+		if err := r.Get(ctx, client.ObjectKey{Name: storage.Name, Namespace: storage.Namespace}, deployment); err != nil {
+			if client.IgnoreNotFound(err) == nil {
+				return nil
+			}
 			return err
+		}
+
+		// Update the status to ready if the ready replicas are greater than 0 and the storage state is not equal to ready.
+		if deployment.Status.ReadyReplicas > 0 && storage.Status.State != nil && *storage.Status.State != v1alpha1.StorageStateReady {
+			// Update the status of the storage.
+			state := v1alpha1.StorageStateReady
+			storage.Status.State = &state
+			// Add condition to the storage.
+			storage.Status.Conditions = append(storage.Status.Conditions, metav1.Condition{
+				Type:               string(v1alpha1.StorageStateReady),
+				Status:             metav1.ConditionTrue,
+				Reason:             "DeploymentReady",
+				Message:            "Deployment is ready",
+				LastTransitionTime: metav1.Now(),
+			})
+			// Update the status of the storage.
+			log.Info("Storage is ready", "Storage.Namespace", storage.Namespace, "Storage.Name", storage.Name)
+			if err := r.Status().Update(ctx, storage); err != nil {
+				return err
+			}
+		}
+	} else if storage.Spec.Type == v1alpha1.StorageTypePostgres && storage.Spec.Postgres != nil {
+		if storage.Spec.Postgres.External {
+			state := v1alpha1.StorageStateReady
+			storage.Status.State = &state
+			// Add condition to the storage.
+			storage.Status.Conditions = append(storage.Status.Conditions, metav1.Condition{
+				Type:               string(v1alpha1.StorageStateReady),
+				Status:             metav1.ConditionTrue,
+				Reason:             "DeploymentReady",
+				Message:            "Deployment is ready",
+				LastTransitionTime: metav1.Now(),
+			})
+			// Update the status of the storage.
+			log.Info("Storage is ready", "Storage.Namespace", storage.Namespace, "Storage.Name", storage.Name)
+			if err := r.Status().Update(ctx, storage); err != nil {
+				return err
+			}
 		}
 	}
 
