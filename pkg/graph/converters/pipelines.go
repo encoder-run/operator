@@ -70,19 +70,17 @@ func PipelineCRDToModel(pipelineCRD *v1alpha1.Pipeline) (*model.Pipeline, error)
 	var status model.PipelineStatus
 	if pipelineCRD.Status.State != nil {
 		switch *pipelineCRD.Status.State {
-		case v1alpha1.PipelineStateNotDeployed:
-			status = model.PipelineStatusNotDeployed
-		case v1alpha1.PipelineStateDeploying:
-			status = model.PipelineStatusDeploying
 		case v1alpha1.PipelineStateReady:
 			status = model.PipelineStatusReady
+		case v1alpha1.PipelineStateRunning:
+			status = model.PipelineStatusRunning
 		case v1alpha1.PipelineStateError:
 			status = model.PipelineStatusError
 		default:
 			return nil, fmt.Errorf("unknown pipeline state: %s", *pipelineCRD.Status.State)
 		}
 	} else {
-		status = model.PipelineStatusNotDeployed
+		status = model.PipelineStatusReady
 	}
 	p.Status = status
 

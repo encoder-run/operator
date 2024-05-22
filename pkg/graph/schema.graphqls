@@ -35,9 +35,8 @@ enum PipelineType {
 }
 
 enum PipelineStatus {
-  NOT_DEPLOYED
-  DEPLOYING
   READY
+  RUNNING
   ERROR
 }
 

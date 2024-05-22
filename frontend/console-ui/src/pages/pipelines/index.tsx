@@ -40,6 +40,20 @@ export default function PipelinesPage() {
     const navigate = useNavigate();
     const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
     const [openAddDialog, setOpenAddDialog] = useState(false);
+    const [fetchCount, setFetchCount] = useState(0);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (fetchCount < 10) {
+                refetch();
+                setFetchCount(fetchCount + 1);
+            } else {
+                clearInterval(interval);
+            }
+        }, 5000);
+
+        return () => clearInterval(interval);
+    }, [fetchCount]);
 
     const handleShowDeleteDialog = () => {
         setOpenConfirmDelete(true);
@@ -70,6 +84,7 @@ export default function PipelinesPage() {
             setPipelines(data.pipelines);
         }
     }, [data]);
+    
 
     return (
         <>

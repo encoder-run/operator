@@ -30,10 +30,9 @@ const (
 type PipelineState string
 
 const (
-	PipelineStateNotDeployed PipelineState = "NOT_DEPLOYED"
-	PipelineStateDeploying   PipelineState = "DEPLOYING"
-	PipelineStateReady       PipelineState = "READY"
-	PipelineStateError       PipelineState = "ERROR"
+	PipelineStateReady   PipelineState = "READY"
+	PipelineStateError   PipelineState = "ERROR"
+	PipelineStateRunning PipelineState = "RUNNING"
 )
 
 type RepositoryEmbeddingsSpec struct {

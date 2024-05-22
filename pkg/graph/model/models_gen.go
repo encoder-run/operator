@@ -300,22 +300,20 @@ func (e PipelineExecutionStatus) MarshalGQL(w io.Writer) {
 type PipelineStatus string
 
 const (
-	PipelineStatusNotDeployed PipelineStatus = "NOT_DEPLOYED"
-	PipelineStatusDeploying   PipelineStatus = "DEPLOYING"
-	PipelineStatusReady       PipelineStatus = "READY"
-	PipelineStatusError       PipelineStatus = "ERROR"
+	PipelineStatusReady   PipelineStatus = "READY"
+	PipelineStatusRunning PipelineStatus = "RUNNING"
+	PipelineStatusError   PipelineStatus = "ERROR"
 )
 
 var AllPipelineStatus = []PipelineStatus{
-	PipelineStatusNotDeployed,
-	PipelineStatusDeploying,
 	PipelineStatusReady,
+	PipelineStatusRunning,
 	PipelineStatusError,
 }
 
 func (e PipelineStatus) IsValid() bool {
 	switch e {
-	case PipelineStatusNotDeployed, PipelineStatusDeploying, PipelineStatusReady, PipelineStatusError:
+	case PipelineStatusReady, PipelineStatusRunning, PipelineStatusError:
 		return true
 	}
 	return false
