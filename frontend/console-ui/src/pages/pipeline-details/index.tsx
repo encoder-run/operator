@@ -79,7 +79,7 @@ export default function PipelineDetailsPage() {
         }, 900000);
 
         return () => {
-            clearInterval(interval)
+            clearInterval(interval);
             clearTimeout(timeout);
         };
     }, [executionsRefetch]);
