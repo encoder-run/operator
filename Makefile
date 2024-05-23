@@ -97,12 +97,8 @@ docker-build: ## Build docker image with the manager.
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
-ifdef $(tag)
-	$(CONTAINER_TOOL) tag ${CONTROLLER_MANAGER_IMG}:${CONTROLLER_MANAGER_IMG_VERSION} ${DOCKER_ORG}/${CONTROLLER_MANAGER_IMG}:${tag}
-	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${CONTROLLER_MANAGER_IMG}:${tag}
-else
-	$(CONTAINER_TOOL) push ${CONTROLLER_MANAGER_IMG}:${CONTROLLER_MANAGER_IMG_VERSION}
-endif
+	$(CONTAINER_TOOL) tag ${CONTROLLER_MANAGER_IMG}:${CONTROLLER_MANAGER_IMG_VERSION} ${DOCKER_ORG}/${CONTROLLER_MANAGER_IMG}:$(tag)
+	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${CONTROLLER_MANAGER_IMG}:$(tag)
 
 .PHONY: gateway-build
 gateway-build: ## Build the gateway Docker image.
