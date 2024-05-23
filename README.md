@@ -27,8 +27,6 @@ This command will set up the necessary Kubernetes configurations and launch all 
 - **Console-UI** on `localhost:32081`
 - **Gateway** on `localhost:32080`
 
-## Contributing
-
 ### Running the Frontend with Mock Data
 To run the frontend interface with mock data, follow these steps:
 1. Navigate to the frontend console-UI directory:
@@ -42,3 +40,7 @@ To run the frontend interface with mock data, follow these steps:
    ```
 This setup will spin up the UI on localhost:3000 and the mock gateway on localhost:4000, simulating the full environment for development or testing.
 
+## Community and Feedback
+Encoder-run is an open-source project and we encourage and welcome contributions. If you wish to contribute, be sure to review our [contribution guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md).
+
+For problems with the installation and setup, discussions about how to best to use encoder-run please use our Github [issues](https://github.com/encoder-run/operator/issues) and make sure to include as much detail as possible.
