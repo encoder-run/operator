@@ -1,4 +1,4 @@
-name: Model Build and Push
+name: Embedder Build and Push
 
 on:
   workflow_dispatch:
