@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/RediSearch/redisearch-go/v2/redisearch"
@@ -35,6 +36,46 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
+
+// supportedLanguages is a map of extension to language. If an item is in the map we should process it.
+var supportedLanguages = map[string]string{
+	".py":    "python",
+	".go":    "go",
+	".js":    "javascript",
+	".jsx":   "javascript",
+	".ts":    "typescript",
+	".tsx":   "typescript",
+	".rb":    "ruby",
+	".java":  "java",
+	".c":     "c",
+	".cpp":   "cpp",
+	".h":     "c",
+	".hpp":   "cpp",
+	".cs":    "csharp",
+	".php":   "php",
+	".rs":    "rust",
+	".swift": "swift",
+	".kt":    "kotlin",
+	".kts":   "kotlin",
+	".clj":   "clojure",
+	".cljs":  "clojurescript",
+	".scala": "scala",
+	".r":     "r",
+	".m":     "matlab",
+	".jl":    "julia",
+	".pl":    "perl",
+	".sh":    "shell",
+	".bash":  "shell",
+	".bat":   "shell",
+	".txt":   "plaintext",
+	".md":    "markdown",
+	".html":  "html",
+	".css":   "css",
+	".yaml":  "yaml",
+	".yml":   "yaml",
+	".graphql": "graphql",
+	".graphqls": "graphql",
+}
 
 func main() {
 	// Define flags
@@ -226,6 +267,13 @@ func processPostgresEmbeddings(embClient *embedder.EmbeddingClient, tree *object
 			log.Fatal(err)
 		}
 
+		// Skip unsupported file types
+		ext := filepath.Ext(file.Name)
+		if _, ok := supportedLanguages[ext]; !ok {
+			fmt.Printf("Skipping file '%s' since it is not supported\n", file.Name)
+			continue
+		}
+
 		hashes[fmt.Sprintf("%s.%s", file.Hash.String(), file.Name)] = true
 
 		if !existingHashes[fmt.Sprintf("%s.%s", file.Hash.String(), file.Name)] {
@@ -256,7 +304,6 @@ func processPostgresEmbeddings(embClient *embedder.EmbeddingClient, tree *object
 }
 
 func processAndSaveEmbeddings(embClient *embedder.EmbeddingClient, db *gorm.DB, filesBatch *[]embedder.CodeEmbeddingRequest, url string) {
-	fmt.Printf("Processing batch of files\n")
 	embeddings, err := embClient.FetchEmbeddings(*filesBatch)
 	if err != nil {
 		log.Fatal(err)
@@ -311,12 +358,20 @@ func processRedisEmbeddings(embClient *embedder.EmbeddingClient, tree *object.Tr
 	count := 0
 
 	for {
+		fmt.Printf("Processing file\n")
 		file, err := treeIter.Next()
 		if err != nil {
 			if err == io.EOF {
 				break // No more files
 			}
 			log.Fatal(err)
+		}
+
+		// Skip unsupported file types
+		ext := filepath.Ext(file.Name)
+		if _, ok := supportedLanguages[ext]; !ok {
+			fmt.Printf("Skipping file '%s' since it is not supported\n", file.Name)
+			continue
 		}
 
 		hashes[file.Hash.String()] = true
@@ -342,6 +397,7 @@ func processRedisEmbeddings(embClient *embedder.EmbeddingClient, tree *object.Tr
 				if err != nil {
 					log.Fatal(err)
 				}
+				fmt.Printf("Setting code embeddings\n")
 				err = setCodeEmbeddings(redisearchClient, *embeddings, url)
 				if err != nil {
 					log.Fatal(err)

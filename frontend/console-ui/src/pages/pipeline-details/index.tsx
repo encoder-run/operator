@@ -50,13 +50,15 @@ export default function PipelineDetailsPage() {
                     <CircularProgress size={20} /> :
                     <Typography>{params.value}</Typography>;
             }
-        }, {
+        }, 
+        {
             field: 'actions',
             headerName: 'Actions',
             type: 'actions',
             width: 100,
             getActions: (params: any) => [
                 <IconButton
+                    disabled
                     color="primary"
                     aria-label="go to details"
                     size="small"

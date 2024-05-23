@@ -27,7 +27,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudv1alpha1 "github.com/encoder-run/operator/api/cloud/v1alpha1"
+	"github.com/encoder-run/operator/api/cloud/v1alpha1"
 )
 
 // PipelineReconciler reconciles a Pipeline object
@@ -55,7 +55,7 @@ type PipelineReconciler struct {
 
 func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
-	var pipeline cloudv1alpha1.Pipeline
+	var pipeline v1alpha1.Pipeline
 	if err := r.Get(ctx, req.NamespacedName, &pipeline); err != nil {
 		logger.Error(err, "Unable to fetch Pipeline")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
@@ -80,23 +80,23 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	// List all the pipeline executions with the label filter
-	pipelineExecutions := &cloudv1alpha1.PipelineExecutionList{}
+	pipelineExecutions := &v1alpha1.PipelineExecutionList{}
 	if err := r.List(ctx, pipelineExecutions, listOpts); err != nil {
 		return ctrl.Result{}, fmt.Errorf("error listing pipeline executions: %w", err)
 	}
 
 	// Determine the overall state based on child PipelineExecutions
-	pipelineStatus := cloudv1alpha1.PipelineStateReady // default to READY
+	pipelineStatus := v1alpha1.PipelineStateReady // default to READY
 	for _, exec := range pipelineExecutions.Items {
 		if exec.Status.State == nil {
-			pipelineStatus = cloudv1alpha1.PipelineStateRunning
+			pipelineStatus = v1alpha1.PipelineStateRunning
 		} else {
 			switch *exec.Status.State {
-			case cloudv1alpha1.PipelineExecutionStatePending:
-			case cloudv1alpha1.PipelineExecutionStateActive:
-				pipelineStatus = cloudv1alpha1.PipelineStateRunning
-			case cloudv1alpha1.PipelineExecutionStateFailed:
-				pipelineStatus = cloudv1alpha1.PipelineStateError
+			case v1alpha1.PipelineExecutionStatePending:
+			case v1alpha1.PipelineExecutionStateActive:
+				pipelineStatus = v1alpha1.PipelineStateRunning
+			case v1alpha1.PipelineExecutionStateFailed:
+				pipelineStatus = v1alpha1.PipelineStateError
 			}
 		}
 	}
@@ -114,10 +114,10 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 // SetupWithManager sets up the controller with the Manager.
 func (r *PipelineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Create an EventHandler for watching PipelineExecution objects
-	ownerHandler := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &cloudv1alpha1.Pipeline{}, handler.OnlyControllerOwner())
+	ownerHandler := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1alpha1.Pipeline{}, handler.OnlyControllerOwner())
 
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cloudv1alpha1.Pipeline{}).
-		Watches(&cloudv1alpha1.PipelineExecution{}, ownerHandler).
+		For(&v1alpha1.Pipeline{}).
+		Watches(&v1alpha1.PipelineExecution{}, ownerHandler).
 		Complete(r)
 }

@@ -34,6 +34,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	v1alpha1 "github.com/encoder-run/operator/api/cloud/v1alpha1"
@@ -49,6 +50,7 @@ type StorageReconciler struct {
 //+kubebuilder:rbac:groups=cloud.encoder.run,resources=storages/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=cloud.encoder.run,resources=storages/finalizers,verbs=update
 //+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+//+kubebuilder:rbac:groups=apps,resources=deployments/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups="",resources=persistentvolumeclaims,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;update;patch;delete
@@ -201,10 +203,10 @@ func (r *StorageReconciler) ensureDeploymentCleanup(ctx context.Context, storage
 	return nil
 }
 
-// ensureStatus ensures that the status of the storage is updated based on the state of the inference service.
+// ensureStatus ensures that the status of the storage is updated based on the state of the storage deployment.
 func (r *StorageReconciler) ensureStatus(ctx context.Context, storage *v1alpha1.Storage) error {
 	log := log.FromContext(ctx)
-	if storage.Spec.Deployment != nil && !storage.Spec.Deployment.Enabled {
+	if storage.Spec.Deployment != nil && storage.Spec.Deployment.Enabled {
 		// Get the deployment if it exists.
 		deployment := &v1.Deployment{}
 		if err := r.Get(ctx, client.ObjectKey{Name: storage.Name, Namespace: storage.Namespace}, deployment); err != nil {
@@ -486,8 +488,8 @@ func (r *StorageReconciler) createDeployment(ctx context.Context, storage *v1alp
 		storage.Status.Conditions = append(storage.Status.Conditions, metav1.Condition{
 			Type:               string(v1alpha1.StorageStateDeploying),
 			Status:             metav1.ConditionTrue,
-			Reason:             "InferenceServiceCreated",
-			Message:            "Inference service created successfully",
+			Reason:             "StorageDeploymentCreated",
+			Message:            "Storage deployment created successfully",
 			LastTransitionTime: metav1.Now(),
 		})
 		// Update the status of the storage.
@@ -503,8 +505,10 @@ func (r *StorageReconciler) createDeployment(ctx context.Context, storage *v1alp
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *StorageReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// Create an EventHandler for watching PipelineExecution objects
+	ownerHandler := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &v1alpha1.Storage{}, handler.OnlyControllerOwner())
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&v1alpha1.Storage{}).
-		Owns(&v1.Deployment{}).
+		Watches(&v1.Deployment{}, ownerHandler).
 		Complete(r)
 }

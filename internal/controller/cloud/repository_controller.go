@@ -24,7 +24,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	cloudv1alpha1 "github.com/encoder-run/operator/api/cloud/v1alpha1"
+	"github.com/encoder-run/operator/api/cloud/v1alpha1"
 )
 
 // RepositoryReconciler reconciles a Repository object
@@ -57,6 +57,6 @@ func (r *RepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 // SetupWithManager sets up the controller with the Manager.
 func (r *RepositoryReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&cloudv1alpha1.Repository{}).
+		For(&v1alpha1.Repository{}).
 		Complete(r)
 }
