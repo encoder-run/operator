@@ -193,6 +193,26 @@ else
 	make default-model
 endif
 
+.PHONY: deploy-staging
+deploy-staging: kind-install cert-manager-install manifests istio kustomize  ## Deploy controller to the K8s cluster specified in ~/.kube/config.
+ifeq ("$(wildcard /tmp/encoder-run)", "")
+	@echo -e "\n\033[0;33mkind storage folder does not exist. Please execute the following command and run 'make deploy-staging' again:\033[0m"
+	@echo -e "\033[0;33mmkdir -p /tmp/encoder-run\033[0m\n"
+else
+	make kind-delete
+	make kind
+	$(ISTIO)/bin/istioctl x precheck
+	$(ISTIO)/bin/istioctl install --set profile=default -y
+	make install
+	$(CMCTL) x install --set prometheus.enabled=false
+	$(KUSTOMIZE) build config/kserve | $(KUBECTL) apply -f -
+	$(KUSTOMIZE) build config/staging | $(KUBECTL) apply -f -
+	make default-admin
+	make default-redis-db
+	make default-model
+endif
+
+
 .PHONY: undeploy
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | $(KUBECTL) delete --ignore-not-found=$(ignore-not-found) -f -

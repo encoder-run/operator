@@ -36,6 +36,7 @@ import (
 type ModelReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	ModelDeployerImage string
 }
 
 //+kubebuilder:rbac:groups=cloud.encoder.run,resources=models,verbs=get;list;watch;create;update;patch;delete
@@ -228,7 +229,7 @@ func (r *ModelReconciler) createInferenceService(ctx context.Context, model v1al
 						Containers: []corev1.Container{
 							{
 								Name:  "kserve-container",
-								Image: "model-deployer:0.0.1",
+								Image: r.ModelDeployerImage,
 								Resources: corev1.ResourceRequirements{
 									Limits: corev1.ResourceList{
 										corev1.ResourceCPU:    model.Spec.Deployment.CPU,

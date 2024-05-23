@@ -25,10 +25,17 @@ Before setting up `encoder-run`, ensure the following prerequisites are met:
 - **Node**: Node is used only if you are developing locally. Please install [v18.17.0](https://nodejs.org/en/download/package-manager).
 
 ### Deployment
-After satisfying the prerequisites, use the following command to deploy the application:
+After satisfying the prerequisites, use the following command to deploy the application. This will build all images from source. First time can take 10 minutes+.
 ```
 make deploy
 ```
+
+or to skip building from source (faster as it pulls from dockerhub):
+
+```
+make deploy-staging
+```
+
 This command will set up the necessary Kubernetes configurations and launch all components. Once deployed, it will expose:
 - **Console-UI** on `localhost:32081`
 - **Gateway** on `localhost:32080`

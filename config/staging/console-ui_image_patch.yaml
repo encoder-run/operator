@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: console-ui
+spec:
+  template:
+    spec:
+      containers:
+        - name: console-ui
+          image: encoderrun/console-ui:latest

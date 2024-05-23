@@ -70,8 +70,13 @@ spec:
         - /manager
         args:
         - --leader-elect
-        image: controller:latest
+        image: controller:0.0.1
         name: manager
+        env:
+        - name: REPO_EMBEDDER_CONTAINER_IMAGE
+          value: repository-embedder:0.0.1
+        - name: MODEL_DEPLOYER_CONTAINER_IMAGE
+          value: model-deployer:0.0.1
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:

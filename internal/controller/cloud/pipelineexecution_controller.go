@@ -38,7 +38,8 @@ import (
 // PipelineExecutionReconciler reconciles a PipelineExecution object
 type PipelineExecutionReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme                  *runtime.Scheme
+	RepositoryEmbedderImage string
 }
 
 //+kubebuilder:rbac:groups=cloud.encoder.run,resources=pipelineexecutions,verbs=get;list;watch;create;update;patch;delete
@@ -117,7 +118,7 @@ func (r *PipelineExecutionReconciler) ensureJob(ctx context.Context, pe *v1alpha
 						Containers: []v1.Container{
 							{
 								Name:    "repoembedder-container",
-								Image:   "repository-embedder:0.0.1",
+								Image:   r.RepositoryEmbedderImage,
 								Command: []string{"./main"},
 								Args: []string{
 									fmt.Sprintf("--storageId=%s", pipeline.Spec.RepositoryEmbeddings.Storage.Name),

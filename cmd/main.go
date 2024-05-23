@@ -18,6 +18,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -76,6 +77,20 @@ func main() {
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
+	// Read the environment variable
+	repoEmbImg := os.Getenv("REPO_EMBEDDER_CONTAINER_IMAGE")
+	if repoEmbImg == "" {
+		setupLog.Error(fmt.Errorf("environment variable not set"), "unable to get environment variable", "REPO_EMBEDDER_CONTAINER_IMAGE")
+		os.Exit(1)
+	}
+
+	// Read the environment variable
+	modelDeployerImg := os.Getenv("MODEL_DEPLOYER_CONTAINER_IMAGE")
+	if modelDeployerImg == "" {
+		setupLog.Error(fmt.Errorf("environment variable not set"), "unable to get environment variable", "MODEL_DEPLOYER_CONTAINER_IMAGE")
+		os.Exit(1)
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
 		Metrics:                metricsserver.Options{BindAddress: metricsAddr},
@@ -100,8 +115,9 @@ func main() {
 	}
 
 	if err = (&cloudcontroller.ModelReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:             mgr.GetClient(),
+		Scheme:             mgr.GetScheme(),
+		ModelDeployerImage: modelDeployerImg,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Model")
 		os.Exit(1)
@@ -128,8 +144,9 @@ func main() {
 		os.Exit(1)
 	}
 	if err = (&cloudcontroller.PipelineExecutionReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:                  mgr.GetClient(),
+		Scheme:                  mgr.GetScheme(),
+		RepositoryEmbedderImage: repoEmbImg,
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "PipelineExecution")
 		os.Exit(1)
