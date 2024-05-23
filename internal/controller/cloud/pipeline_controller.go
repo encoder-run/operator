@@ -75,7 +75,7 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	// Prepare ListOptions with the label selector
 	listOpts := &client.ListOptions{
-		Namespace:     "default",
+		Namespace:     req.Namespace,
 		LabelSelector: selector,
 	}
 
