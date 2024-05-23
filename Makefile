@@ -9,7 +9,7 @@ GATEWAY_IMG ?= gateway
 GATEWAY_IMG_VERSION ?= 0.0.1
 CONSOLE_UI_IMG ?= console-ui
 CONSOLE_UI_IMG_VERSION ?= 0.0.1
-MODELDEPLOYER_IMG ?= codeembedder
+MODELDEPLOYER_IMG ?= model-deployer
 MODELDEPLOYER_IMG_VERSION ?= 0.0.1
 REPOSITORY_EMBEDDER_IMG ?= repository-embedder
 REPOSITORY_EMBEDDER_IMG_VERSION ?= 0.0.1
@@ -106,19 +106,35 @@ gateway-build: ## Build the gateway Docker image.
 
 .PHONY: gateway-push
 gateway-push: ## Push the gateway Docker image.
-	$(CONTAINER_TOOL) push ${GATEWAY_IMG}:${GATEWAY_IMG_VERSION}
+	$(CONTAINER_TOOL) tag ${GATEWAY_IMG}:${GATEWAY_IMG_VERSION} ${DOCKER_ORG}/${GATEWAY_IMG}:$(tag)
+	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${GATEWAY_IMG}:$(tag)
 
 .PHONY: console-ui-build
 console-ui-build: ## Build the console-ui Docker image.
 	$(CONTAINER_TOOL) build -t ${CONSOLE_UI_IMG}:${CONSOLE_UI_IMG_VERSION} -f frontend/console-ui/Dockerfile frontend/console-ui
 
+.PHONY: console-ui-push
+console-ui-push: ## Push the console-ui Docker image.
+	$(CONTAINER_TOOL) tag ${CONSOLE_UI_IMG}:${CONSOLE_UI_IMG_VERSION} ${DOCKER_ORG}/${CONSOLE_UI_IMG}:$(tag)
+	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${CONSOLE_UI_IMG}:$(tag)
+
 .PHONY: modeldeployer-docker-build
-modeldeployer-docker-build: ## Build the codeembedder Docker image.
+modeldeployer-docker-build: ## Build the modeldeployer Docker image.
 	docker build -t ${MODELDEPLOYER_IMG}:${MODELDEPLOYER_IMG_VERSION} -f cmd/modeldeployer/Dockerfile .
+
+.PHONY: modeldeployer-docker-push
+modeldeployer-docker-push: ## Push the modeldeployer Docker image.
+	$(CONTAINER_TOOL) tag ${MODELDEPLOYER_IMG}:${MODELDEPLOYER_IMG_VERSION} ${DOCKER_ORG}/${MODELDEPLOYER_IMG}:$(tag)
+	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${MODELDEPLOYER_IMG}:$(tag)
 
 .PHONY: repoembedder-build
 repoembedder-build: ## Build the repositoryembedder Docker image.
 	$(CONTAINER_TOOL) build -t ${REPOSITORY_EMBEDDER_IMG}:${REPOSITORY_EMBEDDER_IMG_VERSION} -f cmd/repositoryembedder/Dockerfile .
+
+.PHONY: repoembedder-push
+repoembedder-push: ## Push the repositoryembedder Docker image.
+	$(CONTAINER_TOOL) tag ${REPOSITORY_EMBEDDER_IMG}:${REPOSITORY_EMBEDDER_IMG_VERSION} ${DOCKER_ORG}/${REPOSITORY_EMBEDDER_IMG}:$(tag)
+	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${REPOSITORY_EMBEDDER_IMG}:$(tag)
 
 
 # PLATFORMS defines the target platforms for the manager image be built to provide support to multiple

@@ -1,4 +1,4 @@
-name: Controller Manager Build and Push
+name: Gateway Build and Push
 
 on:
   workflow_dispatch:
@@ -6,9 +6,8 @@ on:
     branches:
       - main
     paths:
-      - 'cmd/main.go'
+      - 'cmd/gateway/**'
       - 'pkg/**'
-      - 'internal/**'
       - 'api/**'
 
 jobs:
@@ -30,6 +29,6 @@ jobs:
 
       - name: Build & Push Container
         run: |
-          make docker-build
-          make tag=${{ github.sha }} docker-push
-          make tag=latest docker-push
+          make gateway-build
+          make tag=${{ github.sha }} gateway-push
+          make tag=latest gateway-push

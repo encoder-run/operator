@@ -1,4 +1,4 @@
-name: Controller Manager Build and Push
+name: UI Build and Push
 
 on:
   workflow_dispatch:
@@ -6,10 +6,7 @@ on:
     branches:
       - main
     paths:
-      - 'cmd/main.go'
-      - 'pkg/**'
-      - 'internal/**'
-      - 'api/**'
+      - 'frontend/**'
 
 jobs:
   build:
@@ -30,6 +27,6 @@ jobs:
 
       - name: Build & Push Container
         run: |
-          make docker-build
-          make tag=${{ github.sha }} docker-push
-          make tag=latest docker-push
+          make console-ui-build
+          make tag=${{ github.sha }} console-ui-push
+          make tag=latest console-ui-push

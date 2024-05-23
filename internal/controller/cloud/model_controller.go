@@ -228,7 +228,7 @@ func (r *ModelReconciler) createInferenceService(ctx context.Context, model v1al
 						Containers: []corev1.Container{
 							{
 								Name:  "kserve-container",
-								Image: "codeembedder:0.0.1",
+								Image: "model-deployer:0.0.1",
 								Resources: corev1.ResourceRequirements{
 									Limits: corev1.ResourceList{
 										corev1.ResourceCPU:    model.Spec.Deployment.CPU,

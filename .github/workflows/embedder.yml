@@ -1,4 +1,4 @@
-name: Controller Manager Build and Push
+name: Model Build and Push
 
 on:
   workflow_dispatch:
@@ -6,10 +6,8 @@ on:
     branches:
       - main
     paths:
-      - 'cmd/main.go'
+      - 'cmd/repositoryembedder/**'
       - 'pkg/**'
-      - 'internal/**'
-      - 'api/**'
 
 jobs:
   build:
@@ -30,6 +28,6 @@ jobs:
 
       - name: Build & Push Container
         run: |
-          make docker-build
-          make tag=${{ github.sha }} docker-push
-          make tag=latest docker-push
+          make repoembedder-build
+          make tag=${{ github.sha }} repoembedder-push
+          make tag=latest repoembedder-push
