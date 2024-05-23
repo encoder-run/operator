@@ -27,6 +27,17 @@ This command will set up the necessary Kubernetes configurations and launch all 
 - **Console-UI** on `localhost:32081`
 - **Gateway** on `localhost:32080`
 
+## Roadmap
+Here's a short list of planned features and enhancements for `encoder-run`:
+
+- [X] Redis deployments
+- [X] Postgres external db
+- [ ] Postgres deployments
+- [ ] ElasticSearch deployments/external
+- [ ] Custom chunking strategies based on AST, etc
+
+Feel free to contribute or suggest new features by opening an issue or submitting a pull request on our GitHub repository.
+
 ## Contributing
 
 ### Running the Frontend with Mock Data
