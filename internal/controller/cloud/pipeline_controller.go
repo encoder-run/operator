@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -60,10 +61,28 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	var pipelineExecutions cloudv1alpha1.PipelineExecutionList
-	if err := r.List(ctx, &pipelineExecutions, client.InNamespace(req.Namespace), client.MatchingFields{"spec.pipelineRef.name": pipeline.Name}); err != nil {
-		logger.Error(err, "Unable to list child PipelineExecutions")
-		return ctrl.Result{}, err
+	labelSelector := &metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			"pipelineId": pipeline.Name,
+		},
+	}
+
+	// Convert LabelSelector to a labels.Selector
+	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+	if err != nil {
+		return ctrl.Result{}, fmt.Errorf("error creating label selector: %w", err)
+	}
+
+	// Prepare ListOptions with the label selector
+	listOpts := &client.ListOptions{
+		Namespace:     "default",
+		LabelSelector: selector,
+	}
+
+	// List all the pipeline executions with the label filter
+	pipelineExecutions := &cloudv1alpha1.PipelineExecutionList{}
+	if err := r.List(ctx, pipelineExecutions, listOpts); err != nil {
+		return ctrl.Result{}, fmt.Errorf("error listing pipeline executions: %w", err)
 	}
 
 	// Determine the overall state based on child PipelineExecutions
@@ -92,24 +111,10 @@ func (r *PipelineReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	return ctrl.Result{}, nil
 }
 
-func indexPipelineRefName(obj client.Object) []string {
-	pe, ok := obj.(*cloudv1alpha1.PipelineExecution)
-	if !ok {
-		// Log error, handle case where object is not a PipelineExecution
-		return nil
-	}
-	return []string{pe.Spec.PipelineRef.Name}
-}
-
 // SetupWithManager sets up the controller with the Manager.
 func (r *PipelineReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	// Create an EventHandler for watching PipelineExecution objects
 	ownerHandler := handler.EnqueueRequestForOwner(mgr.GetScheme(), mgr.GetRESTMapper(), &cloudv1alpha1.Pipeline{}, handler.OnlyControllerOwner())
-
-	// Add an index on the spec.pipelineRef.name field for PipelineExecution objects
-	if err := mgr.GetFieldIndexer().IndexField(context.Background(), &cloudv1alpha1.PipelineExecution{}, "spec.pipelineRef.name", indexPipelineRefName); err != nil {
-		return fmt.Errorf("failed to set up pipelineRef name indexer: %w", err)
-	}
 
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&cloudv1alpha1.Pipeline{}).
