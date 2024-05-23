@@ -14,6 +14,7 @@
 ### Notes
 - Ensure you have plenty of available memory to run the kubernetes setup. Check Docker Desktop resources for memory and make sure its 24GB+. Ensure disk is set reasonably as well due to the nature of large model weights and large docker images.
 - Dimensions for embeddings is currently hard-coded to 768 so ensure the transformer you're deploying matches.
+- Local embedding time is much longer than using a GPU based setup. Sometimes the models first request/response batch is slow but subsequent requests will be faster and more consistent. Feel free to run this setup on a machine with GPU access to speed up inference time.
 
 ### Prerequisites
 Before setting up `encoder-run`, ensure the following prerequisites are met:
