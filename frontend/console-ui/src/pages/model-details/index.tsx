@@ -44,7 +44,9 @@ export default function ModelDetailsPage() {
     
                 // If maximum poll count reached, show error and stop polling
                 if (pollCount >= maxPollCount) {
-                    toast.error('Deployment is taking longer than expected. Please check back later.');
+                    toast.error('Deployment is taking longer than expected. Please check back later.',{
+                        position: "top-center"
+                      });
                     setIsSubmittingOrDeploying(false);
                     clearInterval(pollingInterval);
                 }
@@ -145,7 +147,9 @@ export default function ModelDetailsPage() {
                     onClose={() => setOpenAddDeploymentDialog(false)}
                     onSuccess={() => {
                         setIsSubmittingOrDeploying(true);
-                        toast.success('Deployment created successfully');
+                        toast.success('Deployment created successfully',{
+                            position: "top-center"
+                          });
                     }}
                     refetch={refetch}
                     modelId={modelId ? modelId : ""}

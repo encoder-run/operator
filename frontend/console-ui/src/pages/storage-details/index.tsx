@@ -46,7 +46,9 @@ export default function StorageDetailsPage() {
     
                 // If maximum poll count reached, show error and stop polling
                 if (pollCount >= maxPollCount) {
-                    toast.error('Deployment is taking longer than expected. Please check back later.');
+                    toast.error('Deployment is taking longer than expected. Please check back later.',{
+                        position: "top-center"
+                      });
                     setIsSubmittingOrDeploying(false);
                     clearInterval(pollingInterval);
                 }
@@ -106,6 +108,7 @@ export default function StorageDetailsPage() {
                         </Grid>
                     </Grid>
                 </Paper>
+                
                 <Paper elevation={3} sx={{ p: 2, display: "flex", flexDirection: "column" }}>
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <Typography variant="h5" gutterBottom>
@@ -146,7 +149,9 @@ export default function StorageDetailsPage() {
                     onClose={() => setOpenAddDeploymentDialog(false)}
                     onSuccess={() => {
                         setIsSubmittingOrDeploying(true);
-                        toast.success('Deployment created successfully');
+                        toast.success('Deployment created successfully',{
+                            position: "top-center"
+                          });
                     }}
                     refetch={refetch}
                     storageId={storageId ? storageId : ""}

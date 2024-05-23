@@ -79,7 +79,7 @@ export default function PipelineDetailsPage() {
         }, 900000);
 
         return () => {
-            clearInterval(interval);
+            clearInterval(interval)
             clearTimeout(timeout);
         };
     }, [executionsRefetch]);
@@ -92,7 +92,9 @@ export default function PipelineDetailsPage() {
             refetch();
             // Logic to enable the pipeline should be implemented here
             // sleep for 1 second then refetch\
-            toast.success('Pipeline enabled successfully');
+            toast.success('Pipeline enabled successfully',{
+                position: "top-center"
+              });
             setTimeout(() => {
                 executionsRefetch();
             }, 500);
@@ -110,7 +112,9 @@ export default function PipelineDetailsPage() {
             setTimeout(() => {
                 executionsRefetch();
             }, 500);
-            toast.success('Pipeline triggered successfully');
+            toast.success('Pipeline triggered successfully',{
+                position: "top-center"
+              });
             console.log('Trigger pipeline logic here');
         });
     }
