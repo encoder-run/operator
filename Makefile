@@ -1,6 +1,7 @@
 
 # Image URL to use all building/pushing image targets
 CLUSTER_NAME ?= encoder-run-local
+DOCKER_ORG ?= encoderrun
 IMG ?= controller:latest
 CONTROLLER_MANAGER_IMG ?= controller
 CONTROLLER_MANAGER_IMG_VERSION ?= 0.0.1
@@ -96,7 +97,12 @@ docker-build: ## Build docker image with the manager.
 
 .PHONY: docker-push
 docker-push: ## Push docker image with the manager.
+ifdef $(tag)
+	$(CONTAINER_TOOL) tag ${CONTROLLER_MANAGER_IMG}:${CONTROLLER_MANAGER_IMG_VERSION} ${DOCKER_ORG}/${CONTROLLER_MANAGER_IMG}:${tag}
+	$(CONTAINER_TOOL) push ${DOCKER_ORG}/${CONTROLLER_MANAGER_IMG}:${tag}
+else
 	$(CONTAINER_TOOL) push ${CONTROLLER_MANAGER_IMG}:${CONTROLLER_MANAGER_IMG_VERSION}
+endif
 
 .PHONY: gateway-build
 gateway-build: ## Build the gateway Docker image.
