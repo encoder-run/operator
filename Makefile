@@ -260,7 +260,7 @@ kind-install: # Install the controller in the kind cluster
 			[ $$(uname -m) = arm64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-darwin-arm64; \
 		fi; \
 		chmod +x ./kind; \
-		mv ./kind $(LOCALBIN)/kind; \
+		sudo mv ./kind $(LOCALBIN)/kind; \
 	fi
 
 .PHONY: kind-delete
