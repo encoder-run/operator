@@ -251,6 +251,7 @@ kind: # Create a kind cluster
 kind-install: # Install the controller in the kind cluster
 	@if [ ! -x $(LOCALBIN)/kind ]; then \
 		echo "kind not installed. Installing..."; \
+		mkdir -p $(LOCALBIN); \
 		if [ $$(uname) = "Linux" ]; then \
 			[ $$(uname -m) = x86_64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-amd64; \
 			[ $$(uname -m) = aarch64 ] && curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-linux-arm64; \
