@@ -38,7 +38,7 @@ To run the frontend interface with mock data, follow these steps:
    cd ../console-ui
    npm run local
    ```
-This setup will spin up the UI on localhost:3000 and the mock gateway on localhost:4000, simulating the full environment for development or testing.
+This setup will spin up the UI on `localhost:3000` and the mock gateway on `localhost:4000`, simulating the full environment for development or testing.
 
 ## Community and Feedback
 Encoder-run is an open-source project and we encourage and welcome contributions. If you wish to contribute, be sure to review our [contribution guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md).
