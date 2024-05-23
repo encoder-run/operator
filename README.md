@@ -11,6 +11,10 @@
 
 ## Getting Started
 
+### Notes
+- Ensure you have plenty of available memory to run the kubernetes setup. Check Docker Desktop resources for memory and make sure its 24GB+. Ensure disk is set reasonably as well due to the nature of large model weights and large docker images.
+- Dimensions for embeddings is currently hard-coded to 768 so ensure the transformer you're deploying matches.
+
 ### Prerequisites
 Before setting up `encoder-run`, ensure the following prerequisites are met:
 - **Golang**: Golang version 1.21.*+ is required.
