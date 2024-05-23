@@ -32,17 +32,6 @@ This command will set up the necessary Kubernetes configurations and launch all 
 - **Console-UI** on `localhost:32081`
 - **Gateway** on `localhost:32080`
 
-## Roadmap
-Here's a short list of planned features and enhancements for `encoder-run`:
-
-- [X] Redis deployments
-- [X] Postgres external db
-- [ ] Postgres deployments
-- [ ] ElasticSearch deployments/external
-- [ ] Custom chunking strategies based on AST, etc
-
-Feel free to contribute or suggest new features by opening an issue or submitting a pull request on our GitHub repository.
-
 ### Running the Frontend with Mock Data
 To run the frontend interface with mock data, follow these steps:
 1. Navigate to the frontend console-UI directory:
@@ -55,6 +44,17 @@ To run the frontend interface with mock data, follow these steps:
    npm run local
    ```
 This setup will spin up the UI on `localhost:3000` and the mock gateway on `localhost:4000`, simulating the full environment for development or testing.
+
+## Roadmap
+Here's a short list of planned features and enhancements for `encoder-run`:
+
+- [X] Redis deployments
+- [X] Postgres external db
+- [ ] Postgres deployments
+- [ ] ElasticSearch deployments/external
+- [ ] Custom chunking strategies based on AST, etc
+
+Feel free to contribute or suggest new features by opening an issue or submitting a pull request on our GitHub repository.
 
 ## Community and Feedback
 Encoder-run is an open-source project and we encourage and welcome contributions. If you wish to contribute, be sure to review our [contribution guidelines](CONTRIBUTING.md) and [code of conduct](CODE_OF_CONDUCT.md).
