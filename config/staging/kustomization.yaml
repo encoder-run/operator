@@ -1,4 +1,4 @@
-namespace: encoder-run-staging
+namespace: encoder-run
 
 resources:
   - ../default
