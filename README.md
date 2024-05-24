@@ -2,7 +2,7 @@
 [![license badge](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE.md)
 ![Alt text](encoder_home_page.png?raw=true "Encoder Run Search")
 
-`encoder-run` is a Kubernetes operator designed to automate the deployment and management of encoding models for generating and synchronizing source code embeddings. This project aims to ensure that vectors are up-to-date with the latest changes in source code repositories, facilitating improved search, similarity checks, RAG, and code analysis tasks.
+`encoder-run` is a Kubernetes operator designed to automate the lifecycle of source code embeddings. It also manages the underlying storage and model infrastructure. This project ensures vectors stay current with the latest changes in source code repositories, enhancing search, similarity checks, RAG, and code analysis tasks.
 
 ## Features
 - **Model Deployment**: Deploys SentenceTransformer/Encoding models to process embeddings internally.
