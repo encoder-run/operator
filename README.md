@@ -10,6 +10,10 @@
 - **Scalable and Efficient**: Optimized for performance and scalability, handling multiple repositories and large codebases with ease.
 - **Customizable Encoding Models**: Supports a variety of encoding models, allowing users to choose the best fit for their specific requirements.
 
+## Encoder Pipeline Architecture
+![Alt text](encoder_pipeline.png?raw=true "Encoder Pipeline")
+
+
 ## Getting Started
 
 ### Notes
