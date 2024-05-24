@@ -1,4 +1,4 @@
-# encoder-run: Kubernetes Operator for automatically generating vector embeddings for source code.
+# encoder-run: Kubernetes Operator for automatically generating vector embeddings for source code
 [![license badge](https://img.shields.io/badge/license-Apache--2.0-green.svg)](LICENSE.md)
 ![Alt text](encoder_home_page.png?raw=true "Encoder Run Search")
 
